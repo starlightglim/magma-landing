@@ -10,6 +10,8 @@ let raycaster = new THREE.Raycaster();
 let isHovering = false;
 let hoverPosition = new THREE.Vector2(0.5, 0.5);
 let targetPosition = new THREE.Vector2(0.5, 0.5);
+let animationFrameId = null; // For animation management
+let isVisible = true; // For visibility management
 
 // Scene parameters
 const params = {
@@ -49,21 +51,27 @@ function init() {
   camera.position.set(0, 0, 5);
   camera.lookAt(0, 0, 0);
 
-  // Set up renderer
+  // Get canvas
+  const canvas = document.getElementById('lava-canvas');
+  
+  // Set up renderer with optimized settings
   renderer = new THREE.WebGLRenderer({ 
-    canvas: document.getElementById('lava-canvas'),
-    antialias: true 
+    canvas: canvas,
+    antialias: false, // Disable antialiasing for better performance
+    powerPreference: 'high-performance',
+    precision: 'mediump', // Use medium precision for better performance
+    depth: false // Don't need depth for this effect
   });
+  
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Cap pixel ratio for better performance
+  
+  // Set renderer to not clear between frames since our scene is simple
+  renderer.autoClear = false;
 
-  // Add lights
+  // Simplify lighting
   const ambientLight = new THREE.AmbientLight(0x333333);
   scene.add(ambientLight);
-  
-  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  dirLight.position.set(1, 1, 1);
-  scene.add(dirLight);
 
   // Load rock with lava
   loadRockWithLava();
@@ -73,10 +81,32 @@ function init() {
   
   // Add hover event listeners to interactive elements
   setupHoverEffects();
+  
+  // Add visibility change detection to pause when tab is inactive
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+}
+
+// Handle visibility change to pause animation when tab is inactive
+function handleVisibilityChange() {
+  isVisible = document.visibilityState === 'visible';
+  
+  if (isVisible) {
+    if (!animationFrameId) {
+      animationFrameId = requestAnimationFrame(animate);
+    }
+  } else {
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+  }
 }
 
 function loadRockWithLava() {
   const textureLoader = new THREE.TextureLoader();
+  
+  // Set texture loading options for performance
+  THREE.Cache.enabled = true;
   
   // Load all textures with paths relative to public directory
   const albedoTexture = textureLoader.load('textures/TCom_Rock_Lava2_1K_albedo.jpg');
@@ -86,11 +116,12 @@ function loadRockWithLava() {
   const aoTexture = textureLoader.load('textures/TCom_Rock_Lava2_1K_ao.png');
   const maskTexture = textureLoader.load('textures/TCom_Rock_Lava2_1K_mask.png');
 
-  // Set texture properties
+  // Set texture properties for better performance
   [albedoTexture, normalTexture, heightTexture, roughnessTexture, aoTexture, maskTexture].forEach(texture => {
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.minFilter = THREE.LinearFilter; // Changed from LinearMipmapLinearFilter for better performance
     texture.magFilter = THREE.LinearFilter;
+    texture.anisotropy = 1; // Limit anisotropic filtering
   });
 
   // Create shader material
@@ -173,38 +204,25 @@ function loadRockWithLava() {
       uniform sampler2D aoMap;
       uniform sampler2D maskMap;
       
-      // Improved noise function
-      float mod289(float x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
-      vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
-      vec4 perm(vec4 x){return mod289(((x * 34.0) + 1.0) * x);}
-      
+      // Simplified noise function for better performance
       float noise(vec3 p){
-          vec3 a = floor(p);
-          vec3 d = p - a;
-          d = d * d * (3.0 - 2.0 * d);
-      
-          vec4 b = a.xxyy + vec4(0.0, 1.0, 0.0, 1.0);
-          vec4 k1 = perm(b.xyxy);
-          vec4 k2 = perm(k1.xyxy + b.zzww);
-      
-          vec4 c = k2 + a.zzzz;
-          vec4 k3 = perm(c);
-          vec4 k4 = perm(c + 1.0);
-      
-          vec4 o1 = fract(k3 * (1.0 / 41.0));
-          vec4 o2 = fract(k4 * (1.0 / 41.0));
-      
-          vec4 o3 = o2 * d.z + o1 * (1.0 - d.z);
-          vec2 o4 = o3.yw * d.x + o3.xz * (1.0 - d.x);
-      
-          return o4.y * d.y + o4.x * (1.0 - d.y);
+          vec3 i = floor(p);
+          vec3 f = fract(p);
+          f = f*f*(3.0-2.0*f);
+          
+          vec2 uv = (i.xy+vec2(37.0,17.0)*i.z) + f.xy;
+          vec2 rg = texture2D(roughnessMap, (uv+0.5)/64.0).yx;
+          return mix(rg.x, rg.y, f.z);
       }
       
+      // Optimized FBM with fewer octaves
       float fbm(vec3 x) {
           float v = 0.0;
           float a = 0.5;
           vec3 shift = vec3(100);
-          for (int i = 0; i < 5; ++i) {
+          
+          // Reduced from 5 to 3 iterations for better performance
+          for (int i = 0; i < 3; ++i) {
               v += a * noise(x);
               x = x * 2.0 + shift;
               a *= 0.5;
@@ -212,14 +230,14 @@ function loadRockWithLava() {
           return v;
       }
 
-      // New function for more organic flow
+      // Optimized organic flow function
       float organicFlow(vec2 uv, float time) {
           float flow = 0.0;
           float scale = noiseScale;
           float speed = flowSpeed;
           
-          // Multiple layers of noise with different scales and speeds
-          for (int i = 0; i < 5; i++) {
+          // Reduced iterations from 5 to 3
+          for (int i = 0; i < 3; i++) {
               vec3 p = vec3(uv * scale, time * speed);
               flow += fbm(p) * (1.0 / float(i + 1));
               scale *= 2.0;
@@ -255,11 +273,10 @@ function loadRockWithLava() {
         float creviceGlowAmount = mix(baseCreviceGlow, maxCreviceGlow, currentInfluence);
         float rimLightAmount = mix(baseRimLight, maxRimLight, currentInfluence);
         
-        // Create height-based cracks with variation
+        // Simplified cracks calculation
         float cracks = smoothstep(0.4, 0.6, height) * mask;
-        cracks *= (1.0 + 0.2 * noise(vec3(vUv * 5.0, time * 0.5)));
         
-        // Calculate rim lighting
+        // Calculate rim lighting (simplified)
         float rim = 1.0 - max(0.0, dot(normal, normalize(vViewPosition)));
         rim = smoothstep(0.5, 1.0, rim) * rimLightAmount;
         
@@ -280,8 +297,8 @@ function loadRockWithLava() {
         // Add roughness variation
         finalColor *= mix(1.0, 0.7, roughness);
         
-        // Add subtle pulsing to the lava
-        float pulse = 1.0 + 0.1 * sin(time * 2.0 + pattern * 10.0);
+        // Simplified pulsing
+        float pulse = 1.0 + 0.1 * sin(time + pattern * 5.0);
         finalColor *= pulse;
         
         gl_FragColor = vec4(finalColor, 1.0);
@@ -290,9 +307,11 @@ function loadRockWithLava() {
     transparent: true
   });
 
-  // Create mesh
+  // Create mesh with optimized geometry
   const aspect = window.innerWidth / window.innerHeight;
-  const geometry = new THREE.PlaneGeometry(2 * aspect, 2, 128, 128);
+  // Reduce geometry resolution for better performance
+  const geometryDetail = window.innerWidth > 768 ? 64 : 32;
+  const geometry = new THREE.PlaneGeometry(2 * aspect, 2, geometryDetail, geometryDetail);
   geometry.computeVertexNormals();
   geometry.computeTangents();
   
@@ -336,7 +355,7 @@ function updateHoverPosition(event, element) {
   hoverPosition.y = -(elementCenterY / window.innerHeight) * 2 + 1;
 }
 
-// Handle window resize
+// Handle window resize with optimization
 function onWindowResize() {
   const aspect = window.innerWidth / window.innerHeight;
   
@@ -347,7 +366,9 @@ function onWindowResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   
   if (rockMesh) {
-    rockMesh.geometry = new THREE.PlaneGeometry(2 * aspect, 2, 128, 128);
+    // Adjust geometry complexity based on screen size
+    const geometryDetail = window.innerWidth > 768 ? 64 : 32;
+    rockMesh.geometry = new THREE.PlaneGeometry(2 * aspect, 2, geometryDetail, geometryDetail);
     rockMesh.geometry.computeVertexNormals();
     rockMesh.geometry.computeTangents();
   }
@@ -360,45 +381,53 @@ function smoothstep(edge0, edge1, x) {
   return x * x * (3 - 2 * x);
 }
 
-// Animation loop
+// Animation loop with performance optimization
 function animate() {
-  requestAnimationFrame(animate);
+  if (!isVisible) {
+    animationFrameId = null;
+    return;
+  }
+  
+  animationFrameId = requestAnimationFrame(animate);
   
   if (rockMesh) {
     const material = rockMesh.material;
     material.uniforms.time.value = performance.now() / 1000;
 
-    // Smoothly update target position
-    if (isHovering) {
-      targetPosition.lerp(hoverPosition, 0.1);
-    } else {
-      targetPosition.lerp(new THREE.Vector2(0.5, 0.5), 0.05);
-    }
+    // Only update effects when visible or hovering
+    if (isHovering || material.uniforms.currentInfluence.value > 0.01) {
+      // Smoothly update target position
+      if (isHovering) {
+        targetPosition.lerp(hoverPosition, 0.1);
+      } else {
+        targetPosition.lerp(new THREE.Vector2(0.5, 0.5), 0.05);
+      }
 
-    // Update raycaster with current target position
-    raycaster.setFromCamera(targetPosition, camera);
-    
-    const intersects = raycaster.intersectObject(rockMesh);
-    
-    let targetInfluence = 0.0;
-    if (intersects.length > 0 && isHovering) {
-      const intersection = intersects[0];
-      const uv = intersection.uv;
+      // Update raycaster with current target position
+      raycaster.setFromCamera(targetPosition, camera);
       
-      const dist = Math.sqrt(
-        Math.pow(uv.x - 0.5, 2) + 
-        Math.pow(uv.y - 0.5, 2)
-      );
+      const intersects = raycaster.intersectObject(rockMesh);
       
-      targetInfluence = smoothstep(params.flowRadius, 0.0, dist);
+      let targetInfluence = 0.0;
+      if (intersects.length > 0 && isHovering) {
+        const intersection = intersects[0];
+        const uv = intersection.uv;
+        
+        const dist = Math.sqrt(
+          Math.pow(uv.x - 0.5, 2) + 
+          Math.pow(uv.y - 0.5, 2)
+        );
+        
+        targetInfluence = smoothstep(params.flowRadius, 0.0, dist);
+      }
+      
+      const currentInfluence = material.uniforms.currentInfluence.value;
+      const newInfluence = currentInfluence + (targetInfluence - currentInfluence) * (1.0 - params.transitionSpeed);
+      
+      material.uniforms.currentInfluence.value = newInfluence;
+      material.uniforms.targetInfluence.value = targetInfluence;
+      material.uniforms.mousePos.value.set(targetPosition.x, targetPosition.y);
     }
-    
-    const currentInfluence = material.uniforms.currentInfluence.value;
-    const newInfluence = currentInfluence + (targetInfluence - currentInfluence) * (1.0 - params.transitionSpeed);
-    
-    material.uniforms.currentInfluence.value = newInfluence;
-    material.uniforms.targetInfluence.value = targetInfluence;
-    material.uniforms.mousePos.value.set(targetPosition.x, targetPosition.y);
   }
   
   renderer.render(scene, camera);

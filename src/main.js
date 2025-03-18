@@ -78,7 +78,7 @@ function init() {
 function loadRockWithLava() {
   const textureLoader = new THREE.TextureLoader();
   
-  // Load all textures
+  // Load all textures with 1K paths
   const albedoTexture = textureLoader.load('/textures/TCom_Rock_Lava2_1K_albedo.jpg');
   const normalTexture = textureLoader.load('/textures/TCom_Rock_Lava2_1K_normal.png');
   const heightTexture = textureLoader.load('/textures/TCom_Rock_Lava2_1K_height.png');
@@ -89,6 +89,8 @@ function loadRockWithLava() {
   // Set texture properties
   [albedoTexture, normalTexture, heightTexture, roughnessTexture, aoTexture, maskTexture].forEach(texture => {
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
   });
 
   // Create shader material

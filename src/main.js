@@ -79,12 +79,12 @@ function loadRockWithLava() {
   const textureLoader = new THREE.TextureLoader();
   
   // Load all textures
-  const albedoTexture = textureLoader.load('/textures/TCom_Rock_Lava2_4K_albedo.jpg');
-  const normalTexture = textureLoader.load('/textures/TCom_Rock_Lava2_4K_normal.png');
-  const heightTexture = textureLoader.load('/textures/TCom_Rock_Lava2_4K_height.png');
-  const roughnessTexture = textureLoader.load('/textures/TCom_Rock_Lava2_4K_roughness.png');
-  const aoTexture = textureLoader.load('/textures/TCom_Rock_Lava2_4K_ao.png');
-  const maskTexture = textureLoader.load('/textures/TCom_Rock_Lava2_4K_mask.png');
+  const albedoTexture = textureLoader.load('/textures/TCom_Rock_Lava2_1K_albedo.jpg');
+  const normalTexture = textureLoader.load('/textures/TCom_Rock_Lava2_1K_normal.png');
+  const heightTexture = textureLoader.load('/textures/TCom_Rock_Lava2_1K_height.png');
+  const roughnessTexture = textureLoader.load('/textures/TCom_Rock_Lava2_1K_roughness.png');
+  const aoTexture = textureLoader.load('/textures/TCom_Rock_Lava2_1K_ao.png');
+  const maskTexture = textureLoader.load('/textures/TCom_Rock_Lava2_1K_mask.png');
 
   // Set texture properties
   [albedoTexture, normalTexture, heightTexture, roughnessTexture, aoTexture, maskTexture].forEach(texture => {

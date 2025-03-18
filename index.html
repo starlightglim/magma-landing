@@ -4,21 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Magma Finance - Smart Liquidity Strategies</title>
-    
-    <!-- Performance optimizations for resource loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <!-- Preload critical textures -->
-    <link rel="preload" as="image" href="/textures/TCom_Rock_Lava2_1K_albedo.jpg">
-    <link rel="preload" as="image" href="/textures/TCom_Rock_Lava2_1K_mask.png">
-    
-    <!-- Preload logo for quick display -->
-    <link rel="preload" as="image" href="/magma-logo-text.svg">
-    
-    <!-- Fonts with display=swap for better loading -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
-    
     <style>
         :root {
             --primary-red: #ff3300;
@@ -33,7 +21,6 @@
             --content-padding: clamp(1rem, 5vw, 2rem);
         }
 
-        /* Critical CSS inlined for faster render */
         * {
             margin: 0;
             padding: 0;
@@ -42,7 +29,7 @@
 
         body {
             margin: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', sans-serif;
             background: var(--background);
             color: var(--text);
             line-height: 1.6;
@@ -50,33 +37,6 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-        }
-
-        /* Hero section - removed content-visibility which was causing issues */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: calc(var(--nav-height) + 2rem) 0 4rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Add will-change hints for optimized animations */
-        .cta-primary, .nav-logo {
-            will-change: transform;
-        }
-
-        /* Optimize canvas rendering */
-        #lava-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 0;
-            width: 100%;
-            height: 100%;
-            transform: translateZ(0); /* Force GPU acceleration */
         }
 
         .container {
@@ -133,6 +93,14 @@
         .nav-link:hover {
             color: var(--primary-red);
             background: rgba(255, 255, 255, 0.05);
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: calc(var(--nav-height) + 2rem) 0 4rem;
+            position: relative;
         }
 
         .hero-content {
@@ -243,6 +211,15 @@
             border-color: var(--text);
         }
 
+        #lava-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            width: 100%;
+            height: 100%;
+        }
+
         .social-links {
             display: none;
         }
@@ -332,21 +309,6 @@
     </style>
 </head>
 <body>
-    <!-- Defer non-critical JavaScript -->
-    <script>
-        // Lazy load textures after page load
-        window.addEventListener('load', function() {
-            // Create link for deferred loading of remaining textures
-            ['normal', 'height', 'roughness', 'ao'].forEach(function(type) {
-                const link = document.createElement('link');
-                link.rel = 'preload';
-                link.as = 'image';
-                link.href = `/textures/TCom_Rock_Lava2_1K_${type}.png`;
-                document.head.appendChild(link);
-            });
-        });
-    </script>
-    
     <nav class="nav">
         <div class="container">
             <img src="/magma-logo-text.svg" alt="Magma Finance" class="nav-logo">

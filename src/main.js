@@ -14,46 +14,47 @@ let animationFrameId = null; // For animation management
 let isVisible = true; // For visibility management
 let clock = new THREE.Clock();
 let interactionPoints = [];
+let lastMouseMoveTime = 0; // For tracking mouse movement timing
 
 // Scene parameters
 const params = {
   // Lava parameters
-  baseIntensity: 0.3,     // Increased base intensity
-  maxIntensity: 1.6,      // Adjusted max intensity
-  lavaColor: '#ff3300',   // Matching our brand color
-  lavaColor2: '#ff6600',  // Secondary brand color
-  lavaColor3: '#ff9900',  // Warm accent color
+  baseIntensity: 0.1,      // Reduced intensity
+  maxIntensity: 0.8,       // Reduced maximum intensity
+  lavaColor: '#E53E3E',    // Matching our refined primary
+  lavaColor2: '#FF8C00',   // Refined accent
+  lavaColor3: '#FFC107',   // Warm accent color
   
   // Rock parameters
-  baseCreviceGlow: 0.08,   // Subtle base glow
-  maxCreviceGlow: 0.2,     // Moderate max glow
-  baseRimLight: 0.15,      // Subtle rim light
-  maxRimLight: 0.5,        // Increased rim light
-  rockDarkness: 0.65,      // Darker rock for contrast
+  baseCreviceGlow: 0.03,   // Reduced base glow
+  maxCreviceGlow: 0.15,    // Reduced maximum glow
+  baseRimLight: 0.06,      // Reduced rim light
+  maxRimLight: 0.3,        // Reduced maximum rim light
+  rockDarkness: 0.75,      // Darker rock for contrast
   
-  // Flow parameters
-  flowSpeed: 0.04,        // Slower, more subtle flow
-  flowRadius: 0.5,        // Larger influence radius
-  transitionSpeed: 0.96,  // Smoother transitions
-  noiseScale: 3.0,        // Adjusted noise scale
-  noiseOctaves: 5,        // Increased complexity
-  colorMixSpeed: 0.35,    // Slower color mixing
-  fadeSpeed: 0.95,        // Smoother fading
+  // Flow parameters - slowed down and simplified
+  flowSpeed: 0.02,         // Very slow flow
+  flowRadius: 0.6,         // Larger influence radius
+  transitionSpeed: 0.98,   // Slower transitions
+  noiseScale: 1.5,         // Reduced scale for larger patterns
+  noiseOctaves: 2,         // Minimum detail
+  colorMixSpeed: 0.1,      // Slower color mixing
+  fadeSpeed: 0.99,         // Slower fading
   
-  // New turbulence parameters
-  turbulenceScale: 1.8,   // Scale of turbulence
-  turbulenceSpeed: 0.12,  // Speed of turbulence
+  // Turbulence parameters - minimal
+  turbulenceScale: 1.0,    // Reduced turbulence
+  turbulenceSpeed: 0.02,   // Very slow turbulence
   
-  // New variation parameters 
-  temperatureVariation: 0.15, // Random temperature variation
-  flowVariation: 0.25,     // Random flow variation
+  // Variation parameters - minimal
+  temperatureVariation: 0.05, // Minimal variation
+  flowVariation: 0.05,     // Minimal variation
 };
 
 // Initialize the scene
 function init() {
   // Create scene
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0a0a0a); // Matching our background color
+  scene.background = new THREE.Color(0x0F1116); // Elegant background color matching our design
 
   // Set up camera
   const aspect = window.innerWidth / window.innerHeight;
@@ -123,16 +124,17 @@ function init() {
   clock.start();
 }
 
-// Initialize interaction points system
+// Initialize interaction points system with fewer points
 function initInteractionPoints() {
   interactionPoints = [];
   
-  // Pre-allocate array for shader
-  for (let i = 0; i < 8; i++) {
+  // Pre-allocate array for shader - reduced from 8 to 4 for better performance
+  for (let i = 0; i < 4; i++) {
     interactionPoints.push({
       position: new THREE.Vector2(0, 0),
       strength: 0,
       age: 0,
+      maxAge: 3.0, // Reduced lifetime
       active: false
     });
   }
@@ -158,15 +160,22 @@ function handleVisibilityChange() {
 
 // Track mouse movement across entire screen for subtle effects
 function onMouseMove(event) {
+  // Get current time for rate limiting
+  const currentTime = clock.getElapsedTime();
+  
   // Normalized device coordinates (-1 to +1)
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
   
-  // Occasionally add subtle interaction point
-  if (Math.random() < 0.01) {
-    const normalizedX = event.clientX / window.innerWidth;
-    const normalizedY = 1.0 - (event.clientY / window.innerHeight);
-    addInteractionPoint(normalizedX, normalizedY, 0.3);
+  // Calculate normalized position (0 to 1)
+  const normalizedX = event.clientX / window.innerWidth;
+  const normalizedY = 1.0 - (event.clientY / window.innerHeight);
+  
+  // Create interaction point at mouse position with similar intensity as cta-primary
+  // Only add new point if enough time has passed (rate limiting)
+  if (currentTime - lastMouseMoveTime > 0.03) {
+    addInteractionPoint(normalizedX, normalizedY, 1.5);
+    lastMouseMoveTime = currentTime;
   }
 }
 
@@ -338,38 +347,29 @@ function loadRockWithLava() {
 
       // Dynamic flow with directional bias
       float organicFlow(vec2 uv, float time) {
+        // Use a simpler, more stable flow pattern
         float flow = 0.0;
         float scale = noiseScale;
-        float speed = flowSpeed;
+        float speed = flowSpeed * 0.5; // Slower speed
         
-        // Multiple layers of noise with different scales and speeds
-        for (int i = 0; i < 4; i++) {
-          // Add time-based variation to make flow less uniform
-          float timeOffset = time * speed * (1.0 + 0.15 * sin(uv.x * 4.0 + time * 0.1));
+        // Reduce complexity - use fewer iterations
+        for (int i = 0; i < 3; i++) {
+          float timeOffset = time * speed;
           
-          // Add directional bias to make lava flow downward with some randomness
-          vec2 flowDir = vec2(
-            0.3 * sin(uv.y * 3.0 + time * 0.2), 
-            1.0 + 0.25 * sin(uv.x * 2.0 + time * 0.3)
-          );
-          
-          // Distort UV coordinates based on flow direction
+          // Simple directional flow
+          vec2 flowDir = vec2(0.2, 0.8);
           vec2 distortedUV = uv + flowDir * 0.01 * timeOffset;
           
-          // Add turbulence
-          float turb = turbulence(vec3(distortedUV * turbulenceScale, time * 0.1));
-          
-          // Combine everything
+          // Simplified turbulence
           vec3 p = vec3(distortedUV * scale, timeOffset);
-          flow += fbm(p + vec3(turb, turb, 0.0)) * (1.0 / float(i + 1));
+          flow += noise(p) * (1.0 / float(i + 1));
           
-          scale *= 1.8;
-          speed *= 1.2;
+          scale *= 1.5;
+          speed *= 0.8; // Reduce speed at higher frequencies
         }
         
-        // Add random variation
-        float variation = flowVariation * noise(vec3(uv * 8.0, time * 0.1)) - flowVariation * 0.5;
-        flow += variation;
+        // Simple normalization
+        flow = flow * 0.5 + 0.5;
         
         return clamp(flow, 0.0, 1.0);
       }
@@ -385,7 +385,7 @@ function loadRockWithLava() {
           
           // Calculate distance and influence
           float dist = distance(uv, point.xy);
-          float pointInfluence = point.z * smoothstep(0.3, 0.0, dist) * smoothstep(1.5, 0.0, point.w);
+          float pointInfluence = point.z * smoothstep(0.3, 0.0, dist) * smoothstep(5.0, 0.0, point.w);
           
           // Add interaction influence
           influence = max(influence, pointInfluence);
@@ -416,6 +416,7 @@ function loadRockWithLava() {
         
         // Add interaction influence from mouse and interaction points
         float interactionInfluence = calculateInteractionInfluence(vUv);
+        
         float totalInfluence = max(currentInfluence, interactionInfluence);
         
         // Create pattern with mask
@@ -435,9 +436,8 @@ function loadRockWithLava() {
         rim = smoothstep(0.4, 1.0, rim) * rimLightAmount;
         
         // Add bubble effect (simplified without separate particle system)
-        float bubblePattern = noise(vec3(vUv * 10.0, time * 0.5));
-        float bubbles = step(0.95, bubblePattern) * step(0.3, mask) * totalInfluence;
-        bubbles *= smoothstep(0.0, 0.2, sin(time * 3.0 + vUv.y * 10.0));
+        float bubblePattern = noise(vec3(vUv * 5.0, time * 0.2));
+        float bubbles = step(0.98, bubblePattern) * step(0.4, mask) * totalInfluence * 0.5;
         
         // Create color variation based on temperature
         float temp = pattern * lavaIntensity;
@@ -465,8 +465,8 @@ function loadRockWithLava() {
         // Add roughness variation
         finalColor *= mix(1.0, 0.6, roughness);
         
-        // Add subtle pulsing to the lava
-        float pulse = 1.0 + 0.15 * sin(time + pattern * 5.0 + vUv.x * 2.0 + vUv.y * 3.0);
+        // Add subtle pulsing to the lava - minimal
+        float pulse = 1.0 + 0.05 * sin(time * 0.3 + vUv.y * 2.0);
         finalColor *= pulse;
         
         // Add subtle glow around hot areas
@@ -483,7 +483,7 @@ function loadRockWithLava() {
 
   // Create mesh with optimized geometry
   const aspect = window.innerWidth / window.innerHeight;
-  const geometryDetail = window.innerWidth > 768 ? 128 : 64; // Adaptive detail
+  const geometryDetail = window.innerWidth > 1200 ? 64 : 32; // Reduced detail
   const geometry = new THREE.PlaneGeometry(2 * aspect, 2, geometryDetail, geometryDetail);
   geometry.computeVertexNormals();
   geometry.computeTangents();
@@ -530,39 +530,92 @@ function setupHoverEffects() {
   const interactiveElements = [
     document.querySelector('.nav-logo'),
     document.querySelector('.cta-primary'),
-    // Add more interactive elements as needed
-    document.querySelector('.nav-item'),
-    document.querySelector('.footer-link')
+    document.querySelector('.cta-secondary'),
+    document.querySelector('.nav-link'),
+    document.querySelector('.footer-link'),
+    document.querySelector('.mobile-menu-toggle'),
+    document.querySelector('.hero-title'),
+    document.querySelector('.card')
   ];
 
   interactiveElements.forEach(element => {
     if (element) {
-      element.addEventListener('mouseenter', (e) => {
-        isHovering = true;
-        updateHoverPosition(e, element);
-      });
-
-      element.addEventListener('mouseleave', () => {
-        isHovering = false;
-      });
-
-      element.addEventListener('mousemove', (e) => {
-        if (isHovering) {
-          updateHoverPosition(e, element);
-        }
-      });
+      // For multiple elements with the same class
+      if (element.classList.contains('nav-link') || element.classList.contains('footer-link') || element.classList.contains('card')) {
+        const elements = document.querySelectorAll('.' + Array.from(element.classList).join('.'));
+        elements.forEach(el => addInteractionListeners(el));
+      } else {
+        addInteractionListeners(element);
+      }
+    }
+  });
+  
+  // Helper function to add interaction listeners
+  function addInteractionListeners(el) {
+    el.addEventListener('mouseenter', (e) => {
+      isHovering = true;
+      updateHoverPosition(e, el);
       
-      // Add click effect
-      element.addEventListener('click', (e) => {
-        // Create a stronger interaction point
-        const rect = element.getBoundingClientRect();
+      // Special effects for different elements
+      if (el.classList.contains('hero-title')) {
+        // More dramatic effect for title
+        const rect = el.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+        
+        // Add multiple interaction points along the title
+        for (let i = 0; i < 3; i++) {
+          const xOffset = 0.25 + (i * 0.25); // 0.25, 0.5, 0.75
+          const pointX = (rect.left + (width * xOffset)) / window.innerWidth;
+          const pointY = 1.0 - (rect.bottom - height * 0.4) / window.innerHeight;
+          
+          addInteractionPoint(pointX, pointY, 0.8 + Math.random() * 0.4);
+        }
+      } else if (el.classList.contains('cta-primary')) {
+        // More dramatic effect for primary CTA
+        const rect = el.getBoundingClientRect();
         const centerX = (rect.left + rect.width / 2) / window.innerWidth;
         const centerY = 1.0 - (rect.top + rect.height / 2) / window.innerHeight;
         
         addInteractionPoint(centerX, centerY, 1.5);
-      });
-    }
-  });
+      } else if (el.classList.contains('card')) {
+        // Effect for cards
+        const rect = el.getBoundingClientRect();
+        const centerX = (rect.left + rect.width / 2) / window.innerWidth;
+        const centerY = 1.0 - (rect.top + rect.height / 2) / window.innerHeight;
+        
+        addInteractionPoint(centerX, centerY, 1.2);
+      }
+    });
+
+    el.addEventListener('mouseleave', () => {
+      isHovering = false;
+    });
+
+    el.addEventListener('mousemove', (e) => {
+      if (isHovering) {
+        updateHoverPosition(e, el);
+      }
+    });
+    
+    // Add click effect
+    el.addEventListener('click', (e) => {
+      // Create a stronger interaction point
+      const rect = el.getBoundingClientRect();
+      const centerX = (rect.left + rect.width / 2) / window.innerWidth;
+      const centerY = 1.0 - (rect.top + rect.height / 2) / window.innerHeight;
+      
+      // Different strength based on element type
+      let strength = 1.5;
+      if (el.classList.contains('cta-primary')) {
+        strength = 2.0;
+      } else if (el.classList.contains('hero-title')) {
+        strength = 1.7;
+      }
+      
+      addInteractionPoint(centerX, centerY, strength);
+    });
+  }
 }
 
 function updateHoverPosition(event, element) {
@@ -594,7 +647,8 @@ function onWindowResize() {
   
   if (rockMesh) {
     // Adjust geometry complexity based on screen size
-    const geometryDetail = window.innerWidth > 768 ? 128 : 64;
+    const isMobile = window.innerWidth <= 768;
+    const geometryDetail = isMobile ? 64 : 128;
     rockMesh.geometry = new THREE.PlaneGeometry(2 * aspect, 2, geometryDetail, geometryDetail);
     rockMesh.geometry.computeVertexNormals();
     rockMesh.geometry.computeTangents();
@@ -602,6 +656,33 @@ function onWindowResize() {
     // Update resolution uniform
     if (rockMesh.material.uniforms.resolution) {
       rockMesh.material.uniforms.resolution.value.set(window.innerWidth, window.innerHeight);
+    }
+    
+    // Adjust parameters for mobile
+    if (isMobile) {
+      // Reduce complexity on mobile for better performance
+      params.noiseOctaves = 3;
+      params.flowSpeed = 0.03;
+      
+      if (rockMesh.material.uniforms.noiseOctaves) {
+        rockMesh.material.uniforms.noiseOctaves.value = params.noiseOctaves;
+      }
+      
+      if (rockMesh.material.uniforms.flowSpeed) {
+        rockMesh.material.uniforms.flowSpeed.value = params.flowSpeed;
+      }
+    } else {
+      // Restore original values for desktop
+      params.noiseOctaves = 5;
+      params.flowSpeed = 0.04;
+      
+      if (rockMesh.material.uniforms.noiseOctaves) {
+        rockMesh.material.uniforms.noiseOctaves.value = params.noiseOctaves;
+      }
+      
+      if (rockMesh.material.uniforms.flowSpeed) {
+        rockMesh.material.uniforms.flowSpeed.value = params.flowSpeed;
+      }
     }
   }
 }
@@ -659,19 +740,23 @@ function animate() {
   
   const deltaTime = clock.getDelta();
   const elapsedTime = clock.getElapsedTime();
+  const isMobile = window.innerWidth <= 768;
   
-  if (rockMesh) {
+  // Skip frames on mobile for better performance
+  const shouldSkipFrame = isMobile && (elapsedTime % 2 < 1);
+  
+  if (rockMesh && !shouldSkipFrame) {
     const material = rockMesh.material;
-    material.uniforms.time.value = elapsedTime;
-    material.uniforms.deltaTime.value = deltaTime;
+    material.uniforms.time.value = elapsedTime * 0.3; // Greatly slowed down
+    material.uniforms.deltaTime.value = deltaTime * 0.5;
     
     // Only update effects when visible or hovering
     if (isHovering || material.uniforms.currentInfluence.value > 0.01) {
       // Smoothly update target position
       if (isHovering) {
-        targetPosition.lerp(hoverPosition, 0.1);
+        targetPosition.lerp(hoverPosition, isMobile ? 0.12 : 0.08);
       } else {
-        targetPosition.lerp(new THREE.Vector2(0, 0), 0.03);
+        targetPosition.lerp(new THREE.Vector2(0, 0), isMobile ? 0.04 : 0.02);
       }
 
       // Update raycaster with current target position
@@ -689,7 +774,7 @@ function animate() {
           Math.pow(uv.y - 0.5, 2)
         );
         
-        targetInfluence = smoothstep(params.flowRadius, 0.0, dist);
+        targetInfluence = smoothstep(params.flowRadius, 0.0, dist) * 0.8; // Reduce influence strength
       }
       
       const currentInfluence = material.uniforms.currentInfluence.value;
@@ -703,15 +788,12 @@ function animate() {
     // Update interaction points
     updateInteractionPoints(deltaTime);
     
-    // Occasionally create random lava spurts for more dynamism
-    if (Math.random() < 0.02) {
+    // Reduce the frequency of random lava spurts to minimize performance impact
+    if (Math.random() < 0.005) { // Significantly reduced probability
       const x = Math.random();
       const y = Math.random();
       
-      // Create spurts with varying intensity
-      if (Math.random() < 0.7) {
-        addInteractionPoint(x, y, 0.3 + Math.random() * 0.5);
-      }
+      addInteractionPoint(x, y, 0.2 + Math.random() * 0.3); // Reduced intensity
     }
   }
   

@@ -144,6 +144,16 @@
             color: var(--text);
         }
 
+        .hero-title .magma-logo {
+            height: 1em;
+            width: auto;
+            vertical-align: text-bottom;
+            margin-left: 0.15em;
+            filter: drop-shadow(0 2px 8px rgba(229, 62, 62, 0.3)) brightness(0) saturate(100%) invert(22%) sepia(93%) saturate(7466%) hue-rotate(351deg) brightness(94%) contrast(95%);
+            position: relative;
+            top: 0.05em;
+        }
+
         .hero-title span {
             color: var(--primary);
         }
@@ -164,6 +174,7 @@
             gap: 1.5rem;
             justify-content: center;
             margin-top: clamp(2rem, 5vw, 3rem);
+            margin-bottom: 3rem;
         }
 
         .cta-primary {
@@ -212,29 +223,18 @@
             padding: 7rem 0;
             position: relative;
             z-index: 2;
-            background: linear-gradient(to bottom, rgba(10, 10, 12, 0.85), rgba(8, 8, 10, 0.75));
-            backdrop-filter: blur(15px);
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
+            background: transparent;
+            border-top: none;
+            border-bottom: none;
             position: relative;
-            overflow: hidden;
         }
         
         .card-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 30% 30%, rgba(229, 62, 62, 0.05), transparent 70%),
-                        radial-gradient(circle at 70% 70%, rgba(255, 140, 0, 0.05), transparent 70%);
-            pointer-events: none;
-            z-index: -1;
+            display: none;
         }
         
         .card-section .container {
-            max-width: 1100px;
+            max-width: 1120px;
             margin: 0 auto;
             text-align: center;
         }
@@ -242,106 +242,101 @@
         .section-title {
             text-align: center;
             font-family: 'Playfair Display', serif;
-            font-size: clamp(2rem, 4vw, 2.8rem);
-            margin-bottom: 4rem;
-            color: var(--text);
+            font-size: clamp(1.6rem, 3vw, 2rem);
+            margin-bottom: 3rem;
+            color: var(--text-secondary);
             position: relative;
             display: inline-block;
-            padding-bottom: 1.2rem;
-            letter-spacing: 0.02em;
+            letter-spacing: -0.01em;
+            font-weight: 400;
         }
         
         .section-title::after {
-            content: "";
-            position: absolute;
-            height: 3px;
-            width: 80px;
-            bottom: 0;
-            left: calc(50% - 40px);
-            background: var(--primary);
-            border-radius: 3px;
-            animation: pulseGlow 3s ease-in-out infinite;
+            display: none;
         }
         
-        @keyframes pulseGlow {
-            0% { opacity: 0.7; box-shadow: 0 0 5px rgba(229, 62, 62, 0.3); }
-            50% { opacity: 1; box-shadow: 0 0 10px rgba(229, 62, 62, 0.5); }
-            100% { opacity: 0.7; box-shadow: 0 0 5px rgba(229, 62, 62, 0.3); }
+        .section-title span {
+            color: var(--primary);
+            background: none;
+            -webkit-background-clip: initial;
+            -webkit-text-fill-color: initial;
+            background-clip: initial;
+            position: relative;
+            font-weight: 500;
         }
         
         .cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2.5rem;
-            margin-top: 1rem;
+            margin-top: 1.5rem;
         }
         
         .card {
-            background: linear-gradient(145deg, rgba(17, 17, 20, 0.9), rgba(13, 13, 15, 0.8));
-            backdrop-filter: blur(15px);
+            background: rgba(14, 14, 16, 0.7);
             border-radius: var(--radius);
-            padding: 3rem 2rem;
-            transition: all 0.4s ease;
+            padding: 3.5rem 2.2rem;
+            transition: all 0.3s ease;
             border: 1px solid rgba(255, 255, 255, 0.05);
             position: relative;
-            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
         
-        .card::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                to bottom right,
-                transparent 0%,
-                transparent 40%,
-                rgba(229, 62, 62, 0.1) 100%
-            );
-            z-index: -1;
+        .card::before,
+        .card::after {
+            display: none;
         }
         
         .card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-            border-color: rgba(229, 62, 62, 0.2);
-            background: linear-gradient(145deg, rgba(20, 20, 23, 0.95), rgba(15, 15, 18, 0.85));
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            border-color: rgba(229, 62, 62, 0.12);
         }
         
         .card:hover .card-icon {
-            transform: scale(1.1);
-            text-shadow: 0 0 20px rgba(229, 62, 62, 0.4);
+            transform: scale(1.08);
+            box-shadow: 0 10px 20px rgba(229, 62, 62, 0.25);
         }
         
         .card-icon {
-            margin-bottom: 2rem;
-            width: 64px;
-            height: 64px;
+            margin-bottom: 2.2rem;
+            width: 70px;
+            height: 70px;
             background: linear-gradient(135deg, var(--primary), #ff7e33);
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1.8rem;
-            transition: all 0.4s ease;
-            box-shadow: 0 8px 15px rgba(229, 62, 62, 0.25);
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 15px rgba(229, 62, 62, 0.2);
+        }
+        
+        .card-icon::before {
+            display: none;
+        }
+        
+        .card-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: none;
+            stroke: white;
+            stroke-width: 2.5px;
         }
         
         .card-title {
-            font-size: 1.5rem;
-            margin-bottom: 1.2rem;
+            font-size: 1.6rem;
+            margin-bottom: 1.4rem;
             font-weight: 600;
             letter-spacing: 0.01em;
         }
         
         .card-text {
             color: var(--text-secondary);
-            font-size: 0.95rem;
-            line-height: 1.7;
+            font-size: 1rem;
+            line-height: 1.8;
             padding: 0 0.5rem;
+            opacity: 0.85;
         }
 
         #lava-canvas {
@@ -499,6 +494,66 @@
                 margin: 0 auto;
             }
         }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(229, 62, 62, 0.3);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(229, 62, 62, 0.5);
+        }
+        
+        /* Firefox scrollbar */
+        html {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(229, 62, 62, 0.3) rgba(0, 0, 0, 0.2);
+        }
+
+        /* Scroll Indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+            width: 30px;
+            height: 50px;
+            text-align: center;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+            z-index: 2;
+        }
+        
+        .scroll-indicator:hover {
+            opacity: 1;
+        }
+        
+        .scroll-indicator .arrow {
+            position: relative;
+            width: 20px;
+            height: 20px;
+            border-right: 2px solid var(--primary);
+            border-bottom: 2px solid var(--primary);
+            transform: rotate(45deg);
+            margin: 0 auto;
+            animation: scrollArrow 2s infinite;
+        }
+        
+        @keyframes scrollArrow {
+            0% { opacity: 0; transform: rotate(45deg) translate(-5px, -5px); }
+            50% { opacity: 1; }
+            100% { opacity: 0; transform: rotate(45deg) translate(5px, 5px); }
+        }
     </style>
 </head>
 <body>
@@ -517,7 +572,7 @@
     <main class="hero">
         <div class="hero-content">
             <div class="hero-subtitle-top">Decentralized Liquidity</div>
-            <h1 class="hero-title">Elevate your DeFi strategies with <span>Magma</span></h1>
+            <h1 class="hero-title">Elevate your DeFi strategies with<img src="/magma-logo-text.svg" alt="Magma" class="magma-logo"></h1>
             <p class="hero-subtitle">
                 Sophisticated liquidity solutions designed for modern DeFi. Optimize yield, minimize risk, and maximize returns with our intelligent vaults.
             </p>
@@ -525,27 +580,43 @@
                 <a href="/app" class="cta-primary">Launch Platform</a>
                 <a href="/docs" class="cta-secondary">Learn More</a>
             </div>
+            <div class="scroll-indicator">
+                <div class="arrow"></div>
+            </div>
         </div>
     </main>
     
     <section class="card-section">
         <div class="container">
-            <h2 class="section-title"><span style="color: var(--primary);">Smart</span> Liquidity Solutions</h2>
+            <h2 class="section-title"><span>Smart</span> Liquidity Solutions</h2>
             <div class="cards">
-                <div class="card">
-                    <div class="card-icon">⚡</div>
+                <div class="card" style="--card-index: 0">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                        </svg>
+                    </div>
                     <h3 class="card-title">Optimized Yields</h3>
-                    <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam hendrerit nisi sed sollicitudin pellentesque. Nunc posuere purus rhoncus pulvinar aliquam.</p>
+                    <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
                 </div>
-                <div class="card">
-                    <div class="card-icon">🛡️</div>
+                <div class="card" style="--card-index: 1">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                    </div>
                     <h3 class="card-title">Risk Management</h3>
-                    <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec facilisis neque ut purus fermentum, ac pretium nibh facilisis.</p>
+                    <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent varius dolor purus, et eleifend lectus congue id. Quisque eu metus sit amet turpis facilisis ullamcorper.</p>
                 </div>
-                <div class="card">
-                    <div class="card-icon">🔄</div>
+                <div class="card" style="--card-index: 2">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 6v6l4 2"></path>
+                        </svg>
+                    </div>
                     <h3 class="card-title">Automated Strategies</h3>
-                    <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque euismod metus at enim congue interdum. Sed in laoreet tortor.</p>
+                    <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula. Sed auctor neque eu tellus rhoncus ut eleifend nibh porttitor.</p>
                 </div>
             </div>
         </div>
@@ -581,40 +652,17 @@
             document.querySelector('.nav-links').classList.toggle('active');
         });
         
-        // Initialize enhanced card interactions
+        // Simplified card interactions
         document.querySelectorAll('.card').forEach(card => {
-            // Track mouse position for hover effect
-            card.addEventListener('mousemove', function(e) {
-                // Calculate mouse position relative to card
-                const rect = this.getBoundingClientRect();
-                const x = e.clientX - rect.left; 
-                const y = e.clientY - rect.top;
-                
-                // Calculate rotation based on mouse position
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                const rotateX = (y - centerY) / 20;
-                const rotateY = (centerX - x) / 20;
-                
-                // Apply subtle rotation and highlight effect
-                this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px)`;
-                
-                // Add glow effect in the direction of mouse
-                const glowX = (x / rect.width) * 100;
-                const glowY = (y / rect.height) * 100;
-                this.style.background = `radial-gradient(circle at ${glowX}% ${glowY}%, rgba(30, 30, 35, 0.9), rgba(13, 13, 15, 0.8))`;
-            });
-            
             card.addEventListener('mouseenter', function() {
-                this.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.3), 0 0 15px rgba(229, 62, 62, 0.2)';
-                this.style.borderColor = 'rgba(229, 62, 62, 0.2)';
-                this.querySelector('.card-icon').style.transform = 'scale(1.1)';
+                this.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.2), 0 0 10px rgba(229, 62, 62, 0.1)';
+                this.style.borderColor = 'rgba(229, 62, 62, 0.12)';
+                this.querySelector('.card-icon').style.transform = 'scale(1.08)';
             });
             
             card.addEventListener('mouseleave', function() {
                 this.style.transform = '';
-                this.style.background = 'linear-gradient(145deg, rgba(17, 17, 20, 0.9), rgba(13, 13, 15, 0.8))';
-                this.style.boxShadow = '';
+                this.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.15)';
                 this.style.borderColor = 'rgba(255, 255, 255, 0.05)';
                 this.querySelector('.card-icon').style.transform = '';
             });

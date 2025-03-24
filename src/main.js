@@ -19,35 +19,35 @@ let lastMouseMoveTime = 0; // For tracking mouse movement timing
 // Scene parameters
 const params = {
   // Lava parameters
-  baseIntensity: 0.1,      // Reduced intensity
-  maxIntensity: 0.8,       // Reduced maximum intensity
+  baseIntensity: 0.15,     // Reduced for subtlety
+  maxIntensity: 1.2,       // Increased for more dramatic hover effect
   lavaColor: '#E53E3E',    // Matching our refined primary
   lavaColor2: '#FF8C00',   // Refined accent
   lavaColor3: '#FFC107',   // Warm accent color
   
   // Rock parameters
-  baseCreviceGlow: 0.03,   // Reduced base glow
-  maxCreviceGlow: 0.15,    // Reduced maximum glow
-  baseRimLight: 0.06,      // Reduced rim light
-  maxRimLight: 0.3,        // Reduced maximum rim light
+  baseCreviceGlow: 0.04,   // Very subtle base glow
+  maxCreviceGlow: 0.2,     // Increased for more dramatic effect
+  baseRimLight: 0.08,      // Subtle rim light
+  maxRimLight: 0.5,        // Increased for more dramatic effect
   rockDarkness: 0.75,      // Darker rock for contrast
   
-  // Flow parameters - slowed down and simplified
-  flowSpeed: 0.02,         // Very slow flow
+  // Flow parameters
+  flowSpeed: 0.035,        // Slightly faster for more visible movement
   flowRadius: 0.6,         // Larger influence radius
-  transitionSpeed: 0.98,   // Slower transitions
-  noiseScale: 1.5,         // Reduced scale for larger patterns
-  noiseOctaves: 2,         // Minimum detail
-  colorMixSpeed: 0.1,      // Slower color mixing
-  fadeSpeed: 0.99,         // Slower fading
+  transitionSpeed: 0.95,   // Slightly faster transitions
+  noiseScale: 2.5,        
+  noiseOctaves: 4,         
+  colorMixSpeed: 0.25,     
+  fadeSpeed: 0.97,         
   
-  // Turbulence parameters - minimal
-  turbulenceScale: 1.0,    // Reduced turbulence
-  turbulenceSpeed: 0.02,   // Very slow turbulence
+  // Turbulence parameters
+  turbulenceScale: 1.5,    
+  turbulenceSpeed: 0.08,   
   
-  // Variation parameters - minimal
-  temperatureVariation: 0.05, // Minimal variation
-  flowVariation: 0.05,     // Minimal variation
+  // Variation parameters 
+  temperatureVariation: 0.15, // Increased for more variation
+  flowVariation: 0.15,     
 };
 
 // Initialize the scene
@@ -124,17 +124,17 @@ function init() {
   clock.start();
 }
 
-// Initialize interaction points system with fewer points
+// Initialize interaction points system
 function initInteractionPoints() {
   interactionPoints = [];
   
-  // Pre-allocate array for shader - reduced from 8 to 4 for better performance
-  for (let i = 0; i < 4; i++) {
+  // Pre-allocate array for shader
+  for (let i = 0; i < 8; i++) {
     interactionPoints.push({
       position: new THREE.Vector2(0, 0),
       strength: 0,
       age: 0,
-      maxAge: 3.0, // Reduced lifetime
+      maxAge: 5.0,
       active: false
     });
   }
@@ -347,29 +347,38 @@ function loadRockWithLava() {
 
       // Dynamic flow with directional bias
       float organicFlow(vec2 uv, float time) {
-        // Use a simpler, more stable flow pattern
         float flow = 0.0;
         float scale = noiseScale;
-        float speed = flowSpeed * 0.5; // Slower speed
+        float speed = flowSpeed;
         
-        // Reduce complexity - use fewer iterations
-        for (int i = 0; i < 3; i++) {
-          float timeOffset = time * speed;
+        // Multiple layers of noise with different scales and speeds
+        for (int i = 0; i < 4; i++) {
+          // Add time-based variation to make flow less uniform
+          float timeOffset = time * speed * (1.0 + 0.15 * sin(uv.x * 4.0 + time * 0.1));
           
-          // Simple directional flow
-          vec2 flowDir = vec2(0.2, 0.8);
+          // Add directional bias to make lava flow downward with some randomness
+          vec2 flowDir = vec2(
+            0.3 * sin(uv.y * 3.0 + time * 0.2), 
+            1.0 + 0.25 * sin(uv.x * 2.0 + time * 0.3)
+          );
+          
+          // Distort UV coordinates based on flow direction
           vec2 distortedUV = uv + flowDir * 0.01 * timeOffset;
           
-          // Simplified turbulence
-          vec3 p = vec3(distortedUV * scale, timeOffset);
-          flow += noise(p) * (1.0 / float(i + 1));
+          // Add turbulence
+          float turb = turbulence(vec3(distortedUV * turbulenceScale, time * 0.1));
           
-          scale *= 1.5;
-          speed *= 0.8; // Reduce speed at higher frequencies
+          // Combine everything
+          vec3 p = vec3(distortedUV * scale, timeOffset);
+          flow += fbm(p + vec3(turb, turb, 0.0)) * (1.0 / float(i + 1));
+          
+          scale *= 1.8;
+          speed *= 1.2;
         }
         
-        // Simple normalization
-        flow = flow * 0.5 + 0.5;
+        // Add random variation
+        float variation = flowVariation * noise(vec3(uv * 8.0, time * 0.1)) - flowVariation * 0.5;
+        flow += variation;
         
         return clamp(flow, 0.0, 1.0);
       }
@@ -436,8 +445,9 @@ function loadRockWithLava() {
         rim = smoothstep(0.4, 1.0, rim) * rimLightAmount;
         
         // Add bubble effect (simplified without separate particle system)
-        float bubblePattern = noise(vec3(vUv * 5.0, time * 0.2));
-        float bubbles = step(0.98, bubblePattern) * step(0.4, mask) * totalInfluence * 0.5;
+        float bubblePattern = noise(vec3(vUv * 10.0, time * 0.5));
+        float bubbles = step(0.95, bubblePattern) * step(0.3, mask) * totalInfluence;
+        bubbles *= smoothstep(0.0, 0.2, sin(time * 3.0 + vUv.y * 10.0));
         
         // Create color variation based on temperature
         float temp = pattern * lavaIntensity;
@@ -465,8 +475,8 @@ function loadRockWithLava() {
         // Add roughness variation
         finalColor *= mix(1.0, 0.6, roughness);
         
-        // Add subtle pulsing to the lava - minimal
-        float pulse = 1.0 + 0.05 * sin(time * 0.3 + vUv.y * 2.0);
+        // Add subtle pulsing to the lava
+        float pulse = 1.0 + 0.15 * sin(time + pattern * 5.0 + vUv.x * 2.0 + vUv.y * 3.0);
         finalColor *= pulse;
         
         // Add subtle glow around hot areas
@@ -483,7 +493,7 @@ function loadRockWithLava() {
 
   // Create mesh with optimized geometry
   const aspect = window.innerWidth / window.innerHeight;
-  const geometryDetail = window.innerWidth > 1200 ? 64 : 32; // Reduced detail
+  const geometryDetail = window.innerWidth > 768 ? 128 : 64; // Adaptive detail
   const geometry = new THREE.PlaneGeometry(2 * aspect, 2, geometryDetail, geometryDetail);
   geometry.computeVertexNormals();
   geometry.computeTangents();
@@ -747,8 +757,8 @@ function animate() {
   
   if (rockMesh && !shouldSkipFrame) {
     const material = rockMesh.material;
-    material.uniforms.time.value = elapsedTime * 0.3; // Greatly slowed down
-    material.uniforms.deltaTime.value = deltaTime * 0.5;
+    material.uniforms.time.value = elapsedTime * 0.7; // Slow down time for more elegant movement
+    material.uniforms.deltaTime.value = deltaTime;
     
     // Only update effects when visible or hovering
     if (isHovering || material.uniforms.currentInfluence.value > 0.01) {
@@ -788,12 +798,15 @@ function animate() {
     // Update interaction points
     updateInteractionPoints(deltaTime);
     
-    // Reduce the frequency of random lava spurts to minimize performance impact
-    if (Math.random() < 0.005) { // Significantly reduced probability
+    // Occasionally create random lava spurts for more dynamism
+    if (Math.random() < 0.02) {
       const x = Math.random();
       const y = Math.random();
       
-      addInteractionPoint(x, y, 0.2 + Math.random() * 0.3); // Reduced intensity
+      // Create spurts with varying intensity
+      if (Math.random() < 0.7) {
+        addInteractionPoint(x, y, 0.3 + Math.random() * 0.5);
+      }
     }
   }
   

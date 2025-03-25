@@ -107,7 +107,7 @@
             cursor: pointer;
         }
 
-        .hero {
+        main.hero {
             min-height: 90vh;
             display: flex;
             flex-direction: column;
@@ -118,13 +118,14 @@
 
         .stats-container {
             position: relative;
-            top: calc(var(--nav-height) + 2.5rem);
+            top: calc(var(--nav-height) - 1rem);
             z-index: 2;
             display: flex;
             justify-content: center;
             margin: 0 auto;
             padding: 0 var(--content-padding);
             width: fit-content;
+            opacity: 0;
         }
 
         .stat-card {
@@ -188,7 +189,7 @@
         .hero-content {
             width: 100%;
             max-width: 950px;
-            margin: 5rem auto 0;
+            margin: 7rem auto 0;
             text-align: center;
             z-index: 1;
             padding: 0 var(--content-padding);
@@ -295,6 +296,7 @@
             background: transparent;
             border-top: none;
             border-bottom: none;
+            min-height: 80vh;
         }
         
         .card-section::before {
@@ -511,31 +513,43 @@
         html {
             scrollbar-width: thin;
             scrollbar-color: rgba(229, 62, 62, 0.3) rgba(0, 0, 0, 0.2);
+            scroll-behavior: smooth;
         }
 
         /* Scroll Indicator */
         .scroll-indicator {
             position: absolute;
-            bottom: 3rem;
+            bottom: 2.5rem;
             left: 0;
             right: 0;
             margin: 0 auto;
-            width: 30px;
-            height: 50px;
+            width: 36px;
+            height: 56px;
             text-align: center;
-            opacity: 0.7;
-            transition: opacity 0.3s ease;
+            opacity: 0;
+            transition: all 0.3s ease;
             z-index: 2;
+            cursor: pointer;
+            border-radius: 20px;
+            padding: 0.5rem;
+            animation: fadeIn 1s ease 1.2s forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 0.8; }
         }
         
         .scroll-indicator:hover {
             opacity: 1;
+            transform: translateY(3px);
+            background: rgba(14, 14, 16, 0.3);
         }
         
         .scroll-indicator .arrow {
             position: relative;
-            width: 20px;
-            height: 20px;
+            width: 12px;
+            height: 12px;
             border-right: 2px solid var(--primary);
             border-bottom: 2px solid var(--primary);
             transform: rotate(45deg);
@@ -543,9 +557,18 @@
             animation: scrollArrow 2s infinite;
         }
         
+        .scroll-indicator .arrow:nth-child(1) {
+            animation-delay: 0s;
+        }
+        
+        .scroll-indicator .arrow:nth-child(2) {
+            animation-delay: 0.3s;
+            margin-top: 6px;
+        }
+        
         @keyframes scrollArrow {
             0% { opacity: 0; transform: rotate(45deg) translate(-5px, -5px); }
-            50% { opacity: 1; }
+            50% { opacity: 1; transform: rotate(45deg) translate(0, 0); }
             100% { opacity: 0; transform: rotate(45deg) translate(5px, 5px); }
         }
 
@@ -583,7 +606,7 @@
             }
             
             .hero-content {
-                margin-top: 10rem;
+                margin-top: 11rem;
             }
             
             .hero-subtitle {
@@ -600,7 +623,7 @@
             }
             
             .stats-container {
-                top: calc(var(--nav-height) + 1rem);
+                top: calc(var(--nav-height) - 0.5rem);
                 padding: 0 1rem;
             }
             
@@ -683,6 +706,46 @@
                 padding: 2.5rem 0;
             }
         }
+
+        /* Add animation classes */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.7s ease forwards;
+        }
+        
+        .hero-subtitle-top {
+            opacity: 0;
+        }
+        
+        .hero-title {
+            opacity: 0;
+        }
+        
+        .hero-subtitle {
+            opacity: 0;
+        }
+        
+        .cta-buttons {
+            opacity: 0;
+        }
+        
+        .section-title {
+            opacity: 0;
+        }
+        
+        .card {
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
@@ -727,6 +790,7 @@
                 <a href="/docs" class="cta-secondary">Learn More</a>
             </div>
             <div class="scroll-indicator">
+                <div class="arrow"></div>
                 <div class="arrow"></div>
             </div>
         </div>
@@ -798,7 +862,61 @@
             document.querySelector('.nav-links').classList.toggle('active');
         });
         
-        // Simplified card interactions
+        // Add animations when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate stats container first
+            setTimeout(() => {
+                document.querySelector('.stats-container').classList.add('fade-in-up');
+            }, 100);
+            
+            // Then animate hero elements with staggered delay
+            setTimeout(() => {
+                document.querySelector('.hero-subtitle-top').classList.add('fade-in-up');
+            }, 300);
+            
+            setTimeout(() => {
+                document.querySelector('.hero-title').classList.add('fade-in-up');
+            }, 500);
+            
+            setTimeout(() => {
+                document.querySelector('.hero-subtitle').classList.add('fade-in-up');
+            }, 700);
+            
+            setTimeout(() => {
+                document.querySelector('.cta-buttons').classList.add('fade-in-up');
+            }, 900);
+            
+            // Set up intersection observer for the card section
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Animate section title
+                        document.querySelector('.section-title').classList.add('fade-in-up');
+                        
+                        // Animate cards with staggered delay
+                        document.querySelectorAll('.card').forEach((card, index) => {
+                            setTimeout(() => {
+                                card.classList.add('fade-in-up');
+                            }, 300 + (index * 200));
+                        });
+                        
+                        // Disconnect observer after animation
+                        observer.disconnect();
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            // Observe the card section
+            observer.observe(document.querySelector('.card-section'));
+        });
+        
+        // Smooth scroll to section when clicking the scroll indicator
+        document.querySelector('.scroll-indicator').addEventListener('click', function() {
+            const cardSection = document.querySelector('.card-section');
+            cardSection.scrollIntoView({ behavior: 'smooth' });
+        });
+        
+        // Card hover effects
         document.querySelectorAll('.card').forEach(card => {
             card.addEventListener('mouseenter', function() {
                 this.style.transform = 'translateY(-8px)';

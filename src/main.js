@@ -15,51 +15,65 @@ let isVisible = true; // For visibility management
 let clock = new THREE.Clock();
 let interactionPoints = [];
 let lastMouseMoveTime = 0; // For tracking mouse movement timing
+let initialCameraZ = 5; // Store initial camera Z position
+let zoomScale = 1.0; // Initial zoom scale
+let targetZoomScale = 1.0; // Target zoom scale
 
-// Scene parameters
+// Scene parameters with simplified, more minimal aesthetic
 const params = {
   // Lava parameters
-  baseIntensity: 0.15,     // Reduced for subtlety
-  maxIntensity: 1.2,       // Increased for more dramatic hover effect
-  lavaColor: '#E53E3E',    // Matching our refined primary
-  lavaColor2: '#FF8C00',   // Refined accent
-  lavaColor3: '#FFC107',   // Warm accent color
+  baseIntensity: 0.25,       // Further increased for more visibility
+  maxIntensity: 0.9,         // Further increased for more visibility
+  lavaColor: '#999999',      // Even lighter gray
+  lavaColor2: '#bbbbbb',     // Lighter secondary gray
+  lavaColor3: '#eeeeee',     // Almost white tertiary color
   
   // Rock parameters
-  baseCreviceGlow: 0.04,   // Very subtle base glow
-  maxCreviceGlow: 0.2,     // Increased for more dramatic effect
-  baseRimLight: 0.08,      // Subtle rim light
-  maxRimLight: 0.5,        // Increased for more dramatic effect
-  rockDarkness: 0.75,      // Darker rock for contrast
+  baseCreviceGlow: 0.08,     // Further increased for more visibility
+  maxCreviceGlow: 0.2,       // Increased for more visible glow
+  baseRimLight: 0.1,         // Increased for more visibility
+  maxRimLight: 0.4,          // Increased for more visibility
+  rockDarkness: 0.8,         // Less dark rock for better contrast
   
   // Flow parameters
-  flowSpeed: 0.035,        // Slightly faster for more visible movement
-  flowRadius: 0.6,         // Larger influence radius
-  transitionSpeed: 0.95,   // Slightly faster transitions
-  noiseScale: 2.5,        
-  noiseOctaves: 4,         
-  colorMixSpeed: 0.25,     
-  fadeSpeed: 0.97,         
+  flowSpeed: 0.03,           // Faster flow
+  flowRadius: 0.7,           // Larger influence radius
+  transitionSpeed: 0.95,     // Slightly faster transitions
+  noiseScale: 2.2,           // Increased noise pattern
+  noiseOctaves: 3,           // Keep octaves for pattern
+  colorMixSpeed: 0.3,        // Faster color mixing
+  fadeSpeed: 0.95,           // Faster fade
   
   // Turbulence parameters
-  turbulenceScale: 1.5,    
-  turbulenceSpeed: 0.08,   
+  turbulenceScale: 1.4,      // More turbulence
+  turbulenceSpeed: 0.08,     // Faster turbulence
   
   // Variation parameters 
-  temperatureVariation: 0.15, // Increased for more variation
-  flowVariation: 0.15,     
+  temperatureVariation: 0.15, // More variation
+  flowVariation: 0.15,       // More flow variation
 };
 
 // Initialize the scene
 function init() {
   // Create scene
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0F1116); // Elegant background color matching our design
+  scene.background = new THREE.Color(0x0A0A0A); // Keep exact match with our CSS background
 
   // Set up camera
   const aspect = window.innerWidth / window.innerHeight;
-  camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0.1, 1000);
+  
+  // On mobile, use a narrower field of view to create a "captured area" effect
+  const isMobile = window.innerWidth <= 768;
+  
+  if (isMobile) {
+    // Use a closer camera position for mobile to show a smaller section
+    camera = new THREE.OrthographicCamera(-aspect * 0.8, aspect * 0.8, 1 * 0.8, -1 * 0.8, 0.1, 1000);
+  } else {
+    camera = new THREE.OrthographicCamera(-aspect, aspect, 1, -1, 0.1, 1000);
+  }
+  
   camera.position.set(0, 0, 5);
+  initialCameraZ = camera.position.z;
   camera.lookAt(0, 0, 0);
 
   // Get canvas with error checking
@@ -78,31 +92,28 @@ function init() {
     console.log('Canvas created and added to document body');
   }
   
-  // Set up renderer with fixed settings
+  // Set up renderer with simpler settings
   renderer = new THREE.WebGLRenderer({ 
     canvas: canvas || document.getElementById('lava-canvas'),
-    antialias: true,
+    antialias: false, // Disable for performance
     alpha: false,
     powerPreference: 'high-performance'
   });
   
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // Use a lower pixel ratio for better performance
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   
   // Make sure we clear the canvas on each render
   renderer.autoClear = true;
 
-  // Add enhanced lighting
-  const ambientLight = new THREE.AmbientLight(0x333333, 0.6);
+  // Simpler lighting
+  const ambientLight = new THREE.AmbientLight(0x333333, 0.5);
   scene.add(ambientLight);
   
-  const directionalLight = new THREE.DirectionalLight(0xffa030, 0.8);
+  const directionalLight = new THREE.DirectionalLight(0xffa030, 0.7);
   directionalLight.position.set(1, 1, 1);
   scene.add(directionalLight);
-  
-  const backLight = new THREE.DirectionalLight(0x2040ff, 0.2);
-  backLight.position.set(-1, -1, 1);
-  scene.add(backLight);
 
   // Initialize interaction points
   initInteractionPoints();
@@ -129,12 +140,12 @@ function initInteractionPoints() {
   interactionPoints = [];
   
   // Pre-allocate array for shader
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 6; i++) { // Reduced from 8 to 6 for better performance
     interactionPoints.push({
       position: new THREE.Vector2(0, 0),
       strength: 0,
       age: 0,
-      maxAge: 5.0,
+      maxAge: 4.0, // Reduced from 5.0
       active: false
     });
   }
@@ -158,23 +169,27 @@ function handleVisibilityChange() {
   }
 }
 
-// Track mouse movement across entire screen for subtle effects
+// Track mouse movement with rate limiting for performance
 function onMouseMove(event) {
   // Get current time for rate limiting
   const currentTime = clock.getElapsedTime();
   
-  // Normalized device coordinates (-1 to +1)
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  
-  // Calculate normalized position (0 to 1)
-  const normalizedX = event.clientX / window.innerWidth;
-  const normalizedY = 1.0 - (event.clientY / window.innerHeight);
-  
-  // Create interaction point at mouse position with similar intensity as cta-primary
-  // Only add new point if enough time has passed (rate limiting)
-  if (currentTime - lastMouseMoveTime > 0.03) {
-    addInteractionPoint(normalizedX, normalizedY, 1.5);
+  // Only process mouse movement at most 30 times per second
+  if (currentTime - lastMouseMoveTime > 0.033) {
+    // Normalized device coordinates (-1 to +1)
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    
+    // Calculate normalized position (0 to 1)
+    const normalizedX = event.clientX / window.innerWidth;
+    const normalizedY = 1.0 - (event.clientY / window.innerHeight);
+    
+    // Create interaction point at mouse position with reduced intensity
+    addInteractionPoint(normalizedX, normalizedY, 1.0);
+    
+    // Set a zoom target when interacting
+    targetZoomScale = 1.05;
+    
     lastMouseMoveTime = currentTime;
   }
 }
@@ -198,10 +213,10 @@ function loadRockWithLava() {
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
     texture.minFilter = THREE.LinearMipmapLinearFilter;
     texture.magFilter = THREE.LinearFilter;
-    texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    texture.anisotropy = 1; // Reduced for performance
   });
 
-  // Enhanced shader material for more realistic lava
+  // Simplified shader for better performance and minimal aesthetic
   const lavaShaderMaterial = new THREE.ShaderMaterial({
     uniforms: {
       time: { value: 0 },
@@ -212,7 +227,7 @@ function loadRockWithLava() {
       targetInfluence: { value: 0.0 },
       resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
       randomSeed: { value: Math.random() * 100 },
-      interactionPoints: { value: [] }, // Array of interaction points
+      interactionPoints: { value: [] }, 
       ...Object.entries(params).reduce((acc, [key, value]) => {
         acc[key] = { value: typeof value === 'string' ? new THREE.Color(value) : value };
         return acc;
@@ -229,23 +244,13 @@ function loadRockWithLava() {
       varying vec2 vUv;
       varying vec3 vNormal;
       varying vec3 vViewPosition;
-      varying vec3 vTangent;
-      varying vec3 vBitangent;
-      varying vec3 vWorldPosition;
       
       void main() {
         vUv = uv;
         vNormal = normalize(normalMatrix * normal);
         
-        // Calculate tangent space for normal mapping
-        vec3 tangent = normalize(normalMatrix * vec3(1.0, 0.0, 0.0));
-        vec3 bitangent = normalize(cross(vNormal, tangent));
-        vTangent = tangent;
-        vBitangent = bitangent;
-        
         vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
         vViewPosition = -mvPosition.xyz;
-        vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
         
         gl_Position = projectionMatrix * mvPosition;
       }
@@ -254,9 +259,6 @@ function loadRockWithLava() {
       varying vec2 vUv;
       varying vec3 vNormal;
       varying vec3 vViewPosition;
-      varying vec3 vTangent;
-      varying vec3 vBitangent;
-      varying vec3 vWorldPosition;
       
       uniform float time;
       uniform float deltaTime;
@@ -288,8 +290,8 @@ function loadRockWithLava() {
       uniform float temperatureVariation;
       uniform float flowVariation;
       
-      // Interaction points (up to 8 supported)
-      uniform vec4 interactionPoints[8]; // x, y, strength, age
+      // Interaction points
+      uniform vec4 interactionPoints[6]; // x, y, strength, age
       
       uniform sampler2D albedoMap;
       uniform sampler2D normalMap;
@@ -298,89 +300,55 @@ function loadRockWithLava() {
       uniform sampler2D aoMap;
       uniform sampler2D maskMap;
       
-      // Improved hash function
-      vec3 hash33(vec3 p) {
-        p = fract(p * vec3(443.8975, 397.2973, 491.1871));
-        p += dot(p.zxy, p.yxz + 19.19);
-        return fract(vec3(p.x * p.y, p.z * p.x, p.y * p.z));
+      // Simplified hash function
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
       }
       
-      // Improved noise function
-      float noise(vec3 p) {
-        vec3 i = floor(p);
-        vec3 f = fract(p);
+      // Simplified noise function
+      float noise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
         f = f * f * (3.0 - 2.0 * f);
         
-        vec2 uv = (i.xy + vec2(37.0, 17.0) * i.z) + f.xy;
-        vec2 rg = texture2D(roughnessMap, mod(uv * 0.00625, 1.0)).yx;
-        return mix(rg.x, rg.y, f.z);
+        float a = hash(i);
+        float b = hash(i + vec2(1.0, 0.0));
+        float c = hash(i + vec2(0.0, 1.0));
+        float d = hash(i + vec2(1.0, 1.0));
+        
+        return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
       }
       
-      // Fractal Brownian Motion for more organic patterns
-      float fbm(vec3 x) {
+      // Simplified FBM for better performance
+      float fbm(vec2 x) {
         float v = 0.0;
         float a = 0.5;
-        vec3 shift = vec3(100.0);
+        vec2 shift = vec2(100.0);
         
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < 3; ++i) { // Reduced from 5 to 3
           v += a * noise(x);
-          x = x * 2.0 + shift + 0.02 * sin(time * vec3(0.5, 0.4, 0.3));
+          x = x * 2.0 + shift;
           a *= 0.5;
         }
         
         return v;
       }
-      
-      // Turbulent flow
-      float turbulence(vec3 p) {
-        float t = 0.0;
-        float f = 1.0;
-        
-        for(int i = 0; i < 3; i++) {
-          float phase = time * turbulenceSpeed * (1.0 - 0.8 * f);
-          t += abs(noise(p * f + vec3(0.0, 0.0, phase)) - 0.5) * (1.0 / f);
-          f *= 2.0;
-        }
-        
-        return t;
-      }
 
-      // Dynamic flow with directional bias
-      float organicFlow(vec2 uv, float time) {
-        float flow = 0.0;
-        float scale = noiseScale;
-        float speed = flowSpeed;
+      // Simpler flow pattern
+      float flow(vec2 uv, float time) {
+        float pattern = 0.0;
         
-        // Multiple layers of noise with different scales and speeds
-        for (int i = 0; i < 4; i++) {
-          // Add time-based variation to make flow less uniform
-          float timeOffset = time * speed * (1.0 + 0.15 * sin(uv.x * 4.0 + time * 0.1));
-          
-          // Add directional bias to make lava flow downward with some randomness
-          vec2 flowDir = vec2(
-            0.3 * sin(uv.y * 3.0 + time * 0.2), 
-            1.0 + 0.25 * sin(uv.x * 2.0 + time * 0.3)
-          );
-          
-          // Distort UV coordinates based on flow direction
-          vec2 distortedUV = uv + flowDir * 0.01 * timeOffset;
-          
-          // Add turbulence
-          float turb = turbulence(vec3(distortedUV * turbulenceScale, time * 0.1));
-          
-          // Combine everything
-          vec3 p = vec3(distortedUV * scale, timeOffset);
-          flow += fbm(p + vec3(turb, turb, 0.0)) * (1.0 / float(i + 1));
-          
-          scale *= 1.8;
-          speed *= 1.2;
-        }
+        // Layer 1
+        pattern += fbm(uv * noiseScale + vec2(time * flowSpeed, time * flowSpeed * 0.5));
         
-        // Add random variation
-        float variation = flowVariation * noise(vec3(uv * 8.0, time * 0.1)) - flowVariation * 0.5;
-        flow += variation;
+        // Layer 2 with different scale
+        pattern += 0.5 * fbm(uv * noiseScale * 2.0 + vec2(time * flowSpeed * -0.8, time * flowSpeed * 0.8));
         
-        return clamp(flow, 0.0, 1.0);
+        // Add variation
+        float variation = flowVariation * noise(uv * 5.0) - flowVariation * 0.5;
+        pattern += variation;
+        
+        return clamp(pattern, 0.0, 1.0);
       }
 
       // Function to handle interaction points
@@ -388,25 +356,19 @@ function loadRockWithLava() {
         float influence = 0.0;
         
         // Process each interaction point
-        for(int i = 0; i < 8; i++) {
+        for(int i = 0; i < 6; i++) {
           vec4 point = interactionPoints[i];
           if(point.z <= 0.0) continue; // Skip inactive points
           
           // Calculate distance and influence
           float dist = distance(uv, point.xy);
-          float pointInfluence = point.z * smoothstep(0.3, 0.0, dist) * smoothstep(5.0, 0.0, point.w);
+          float pointInfluence = point.z * smoothstep(0.25, 0.0, dist) * smoothstep(4.0, 0.0, point.w);
           
           // Add interaction influence
           influence = max(influence, pointInfluence);
         }
         
         return influence;
-      }
-
-      vec3 perturbNormal(vec3 normal, vec3 tangent, vec3 bitangent, vec2 uv) {
-        vec3 normalMap = texture2D(normalMap, uv).xyz * 2.0 - 1.0;
-        mat3 TBN = mat3(tangent, bitangent, normal);
-        return normalize(TBN * normalMap);
       }
       
       void main() {
@@ -417,43 +379,29 @@ function loadRockWithLava() {
         float ao = texture2D(aoMap, vUv).r;
         float mask = texture2D(maskMap, vUv).r;
         
-        // Get perturbed normal
-        vec3 normal = perturbNormal(vNormal, vTangent, vBitangent, vUv);
+        // Create flow pattern
+        float pattern = flow(vUv, time) * mask;
         
-        // Create organic flowing lava effect
-        float flow = organicFlow(vUv, time);
-        
-        // Add interaction influence from mouse and interaction points
+        // Add interaction influence
         float interactionInfluence = calculateInteractionInfluence(vUv);
-        
         float totalInfluence = max(currentInfluence, interactionInfluence);
         
-        // Create pattern with mask
-        float pattern = flow * mask;
-        
-        // Calculate influence-based parameters
+        // Calculate parameters based on influence
         float lavaIntensity = mix(baseIntensity, maxIntensity, totalInfluence);
         float creviceGlowAmount = mix(baseCreviceGlow, maxCreviceGlow, totalInfluence);
-        float rimLightAmount = mix(baseRimLight, maxRimLight, totalInfluence);
         
-        // Create height-based cracks with variation
-        float cracks = smoothstep(0.3, 0.7, height) * mask;
-        cracks *= (1.0 + 0.3 * noise(vec3(vUv * 8.0, time * 0.2)));
+        // Create height-based cracks
+        float cracks = smoothstep(0.4, 0.7, height) * mask;
         
         // Calculate rim lighting
-        float rim = 1.0 - max(0.0, dot(normal, normalize(vViewPosition)));
-        rim = smoothstep(0.4, 1.0, rim) * rimLightAmount;
-        
-        // Add bubble effect (simplified without separate particle system)
-        float bubblePattern = noise(vec3(vUv * 10.0, time * 0.5));
-        float bubbles = step(0.95, bubblePattern) * step(0.3, mask) * totalInfluence;
-        bubbles *= smoothstep(0.0, 0.2, sin(time * 3.0 + vUv.y * 10.0));
+        float rim = 1.0 - max(0.0, dot(vNormal, normalize(vViewPosition)));
+        rim = smoothstep(0.5, 1.0, rim) * mix(baseRimLight, maxRimLight, totalInfluence);
         
         // Create color variation based on temperature
         float temp = pattern * lavaIntensity;
         
-        // Add temperature variation
-        float tempVar = temperatureVariation * noise(vec3(vUv * 15.0, time * 0.2)) - temperatureVariation * 0.5;
+        // Add subtle temperature variation
+        float tempVar = temperatureVariation * noise(vUv * 10.0) - temperatureVariation * 0.5;
         temp += tempVar;
         
         // Mix colors based on temperature
@@ -463,28 +411,14 @@ function loadRockWithLava() {
         // Mix colors with textures
         vec3 baseColor = albedo.rgb * (1.0 - rockDarkness);
         vec3 lavaColor = mix(baseColor, hotColor, smoothstep(0.0, 0.8, temp));
-        vec3 crackColor = mix(lavaColor, hotColor * 1.5, cracks * creviceGlowAmount);
-        
-        // Add bubbles
-        crackColor = mix(crackColor, vec3(1.0, 0.9, 0.7), bubbles * 0.8);
+        vec3 crackColor = mix(lavaColor, hotColor * 1.2, cracks * creviceGlowAmount);
         
         // Add rim lighting and AO
         vec3 finalColor = crackColor + rim * hotColor;
-        finalColor *= mix(0.6, 1.0, ao);
+        finalColor *= mix(0.7, 1.0, ao);
         
-        // Add roughness variation
-        finalColor *= mix(1.0, 0.6, roughness);
-        
-        // Add subtle pulsing to the lava
-        float pulse = 1.0 + 0.15 * sin(time + pattern * 5.0 + vUv.x * 2.0 + vUv.y * 3.0);
-        finalColor *= pulse;
-        
-        // Add subtle glow around hot areas
-        finalColor += pattern * hotColor * 0.15;
-        
-        // Simulate self-illumination in cracks
-        float selfIllum = cracks * creviceGlowAmount * totalInfluence * 4.0;
-        finalColor += selfIllum * hotColor;
+        // Add subtle glow
+        finalColor += pattern * hotColor * 0.1;
         
         gl_FragColor = vec4(finalColor, 1.0);
       }
@@ -493,17 +427,15 @@ function loadRockWithLava() {
 
   // Create mesh with optimized geometry
   const aspect = window.innerWidth / window.innerHeight;
-  const geometryDetail = window.innerWidth > 768 ? 128 : 64; // Adaptive detail
+  const geometryDetail = window.innerWidth > 768 ? 64 : 32; // Reduced detail for better performance
   const geometry = new THREE.PlaneGeometry(2 * aspect, 2, geometryDetail, geometryDetail);
-  geometry.computeVertexNormals();
-  geometry.computeTangents();
   
   rockMesh = new THREE.Mesh(geometry, lavaShaderMaterial);
   scene.add(rockMesh);
   
   // Initialize uniform for interaction points
   const points = [];
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 6; i++) { // Reduced from 8 to 6
     points.push(new THREE.Vector4(0, 0, 0, 0));
   }
   rockMesh.material.uniforms.interactionPoints.value = points;
@@ -537,27 +469,15 @@ function addInteractionPoint(x, y, strength = 1.0) {
 }
 
 function setupHoverEffects() {
-  const interactiveElements = [
-    document.querySelector('.nav-logo'),
-    document.querySelector('.cta-primary'),
-    document.querySelector('.cta-secondary'),
-    document.querySelector('.nav-link'),
-    document.querySelector('.footer-link'),
-    document.querySelector('.mobile-menu-toggle'),
-    document.querySelector('.hero-title'),
-    document.querySelector('.card')
+  // Target interactive elements with simplified selectors
+  const interactiveSelectors = [
+    '.nav-logo', '.cta', '.nav-link', 
+    '.dropdown-item', '.header-logo'
   ];
 
-  interactiveElements.forEach(element => {
-    if (element) {
-      // For multiple elements with the same class
-      if (element.classList.contains('nav-link') || element.classList.contains('footer-link') || element.classList.contains('card')) {
-        const elements = document.querySelectorAll('.' + Array.from(element.classList).join('.'));
-        elements.forEach(el => addInteractionListeners(el));
-      } else {
-        addInteractionListeners(element);
-      }
-    }
+  interactiveSelectors.forEach(selector => {
+    const elements = document.querySelectorAll(selector);
+    elements.forEach(el => addInteractionListeners(el));
   });
   
   // Helper function to add interaction listeners
@@ -566,62 +486,42 @@ function setupHoverEffects() {
       isHovering = true;
       updateHoverPosition(e, el);
       
-      // Special effects for different elements
-      if (el.classList.contains('hero-title')) {
-        // More dramatic effect for title
-        const rect = el.getBoundingClientRect();
-        const width = rect.width;
-        const height = rect.height;
-        
-        // Add multiple interaction points along the title
-        for (let i = 0; i < 3; i++) {
-          const xOffset = 0.25 + (i * 0.25); // 0.25, 0.5, 0.75
-          const pointX = (rect.left + (width * xOffset)) / window.innerWidth;
-          const pointY = 1.0 - (rect.bottom - height * 0.4) / window.innerHeight;
-          
-          addInteractionPoint(pointX, pointY, 0.8 + Math.random() * 0.4);
-        }
-      } else if (el.classList.contains('cta-primary')) {
-        // More dramatic effect for primary CTA
-        const rect = el.getBoundingClientRect();
-        const centerX = (rect.left + rect.width / 2) / window.innerWidth;
-        const centerY = 1.0 - (rect.top + rect.height / 2) / window.innerHeight;
-        
-        addInteractionPoint(centerX, centerY, 1.5);
-      } else if (el.classList.contains('card')) {
-        // Effect for cards
-        const rect = el.getBoundingClientRect();
-        const centerX = (rect.left + rect.width / 2) / window.innerWidth;
-        const centerY = 1.0 - (rect.top + rect.height / 2) / window.innerHeight;
-        
-        addInteractionPoint(centerX, centerY, 1.2);
+      // Create interaction point for hover
+      const rect = el.getBoundingClientRect();
+      const centerX = (rect.left + rect.width / 2) / window.innerWidth;
+      const centerY = 1.0 - (rect.top + rect.height / 2) / window.innerHeight;
+      
+      // Different strength based on element type
+      let strength = 0.8;
+      if (el.classList.contains('cta')) {
+        strength = 1.2;
+        targetZoomScale = 1.08; // More zoom for CTA button
+      } else {
+        targetZoomScale = 1.03; // Less zoom for other elements
       }
+      
+      addInteractionPoint(centerX, centerY, strength);
     });
 
     el.addEventListener('mouseleave', () => {
       isHovering = false;
-    });
-
-    el.addEventListener('mousemove', (e) => {
-      if (isHovering) {
-        updateHoverPosition(e, el);
-      }
+      // Reset zoom scale gradually when not hovering
+      targetZoomScale = 1.0;
     });
     
     // Add click effect
-    el.addEventListener('click', (e) => {
+    el.addEventListener('click', () => {
       // Create a stronger interaction point
       const rect = el.getBoundingClientRect();
       const centerX = (rect.left + rect.width / 2) / window.innerWidth;
       const centerY = 1.0 - (rect.top + rect.height / 2) / window.innerHeight;
       
       // Different strength based on element type
-      let strength = 1.5;
-      if (el.classList.contains('cta-primary')) {
-        strength = 2.0;
-      } else if (el.classList.contains('hero-title')) {
-        strength = 1.7;
-      }
+      let strength = 1.2;
+      if (el.classList.contains('cta')) {
+        strength = 1.5;
+        targetZoomScale = 1.1; // Maximum zoom on CTA click
+      } 
       
       addInteractionPoint(centerX, centerY, strength);
     });
@@ -636,63 +536,40 @@ function updateHoverPosition(event, element) {
   // Convert to normalized device coordinates (-1 to +1)
   hoverPosition.x = (elementCenterX / window.innerWidth) * 2 - 1;
   hoverPosition.y = -(elementCenterY / window.innerHeight) * 2 + 1;
-  
-  // Add subtle interaction point for hover
-  if (Math.random() < 0.05) { // Randomly add points during hover for natural effect
-    const normalizedX = elementCenterX / window.innerWidth;
-    const normalizedY = 1.0 - (elementCenterY / window.innerHeight);
-    addInteractionPoint(normalizedX, normalizedY, 0.8);
-  }
 }
 
 // Handle window resize with optimization
 function onWindowResize() {
   const aspect = window.innerWidth / window.innerHeight;
+  const isMobile = window.innerWidth <= 768;
   
-  camera.left = -aspect;
-  camera.right = aspect;
+  if (isMobile) {
+    // More zoomed in view for mobile
+    camera.left = -aspect * 0.8;
+    camera.right = aspect * 0.8;
+    camera.top = 1 * 0.8;
+    camera.bottom = -1 * 0.8;
+  } else {
+    camera.left = -aspect;
+    camera.right = aspect;
+    camera.top = 1;
+    camera.bottom = -1;
+  }
+  
   camera.updateProjectionMatrix();
-  
   renderer.setSize(window.innerWidth, window.innerHeight);
+  
+  // Lower pixel ratio on mobile for better performance
+  renderer.setPixelRatio(isMobile ? Math.min(window.devicePixelRatio, 1) : Math.min(window.devicePixelRatio, 1.5));
   
   if (rockMesh) {
     // Adjust geometry complexity based on screen size
-    const isMobile = window.innerWidth <= 768;
-    const geometryDetail = isMobile ? 64 : 128;
+    const geometryDetail = isMobile ? 32 : 64; // Reduced detail
     rockMesh.geometry = new THREE.PlaneGeometry(2 * aspect, 2, geometryDetail, geometryDetail);
-    rockMesh.geometry.computeVertexNormals();
-    rockMesh.geometry.computeTangents();
     
     // Update resolution uniform
     if (rockMesh.material.uniforms.resolution) {
       rockMesh.material.uniforms.resolution.value.set(window.innerWidth, window.innerHeight);
-    }
-    
-    // Adjust parameters for mobile
-    if (isMobile) {
-      // Reduce complexity on mobile for better performance
-      params.noiseOctaves = 3;
-      params.flowSpeed = 0.03;
-      
-      if (rockMesh.material.uniforms.noiseOctaves) {
-        rockMesh.material.uniforms.noiseOctaves.value = params.noiseOctaves;
-      }
-      
-      if (rockMesh.material.uniforms.flowSpeed) {
-        rockMesh.material.uniforms.flowSpeed.value = params.flowSpeed;
-      }
-    } else {
-      // Restore original values for desktop
-      params.noiseOctaves = 5;
-      params.flowSpeed = 0.04;
-      
-      if (rockMesh.material.uniforms.noiseOctaves) {
-        rockMesh.material.uniforms.noiseOctaves.value = params.noiseOctaves;
-      }
-      
-      if (rockMesh.material.uniforms.flowSpeed) {
-        rockMesh.material.uniforms.flowSpeed.value = params.flowSpeed;
-      }
     }
   }
 }
@@ -719,10 +596,10 @@ function updateInteractionPoints(deltaTime) {
       point.age += deltaTime;
       
       // Decay strength over time
-      point.strength *= 0.98;
+      point.strength *= 0.96; // Faster decay for cleaner effect
       
       // Deactivate if too old or too weak
-      if (point.age > 5.0 || point.strength < 0.05) {
+      if (point.age > 4.0 || point.strength < 0.05) {
         point.active = false;
         point.strength = 0;
       }
@@ -753,20 +630,20 @@ function animate() {
   const isMobile = window.innerWidth <= 768;
   
   // Skip frames on mobile for better performance
-  const shouldSkipFrame = isMobile && (elapsedTime % 2 < 1);
+  const shouldSkipFrame = isMobile && (elapsedTime % 3 < 1);
   
   if (rockMesh && !shouldSkipFrame) {
     const material = rockMesh.material;
-    material.uniforms.time.value = elapsedTime * 0.7; // Slow down time for more elegant movement
+    material.uniforms.time.value = elapsedTime * 0.35; // Faster animation
     material.uniforms.deltaTime.value = deltaTime;
     
     // Only update effects when visible or hovering
     if (isHovering || material.uniforms.currentInfluence.value > 0.01) {
       // Smoothly update target position
       if (isHovering) {
-        targetPosition.lerp(hoverPosition, isMobile ? 0.12 : 0.08);
+        targetPosition.lerp(hoverPosition, isMobile ? 0.1 : 0.06);
       } else {
-        targetPosition.lerp(new THREE.Vector2(0, 0), isMobile ? 0.04 : 0.02);
+        targetPosition.lerp(new THREE.Vector2(0, 0), isMobile ? 0.03 : 0.015);
       }
 
       // Update raycaster with current target position
@@ -784,7 +661,7 @@ function animate() {
           Math.pow(uv.y - 0.5, 2)
         );
         
-        targetInfluence = smoothstep(params.flowRadius, 0.0, dist) * 0.8; // Reduce influence strength
+        targetInfluence = smoothstep(params.flowRadius, 0.0, dist) * 0.6; // Reduced influence
       }
       
       const currentInfluence = material.uniforms.currentInfluence.value;
@@ -798,15 +675,12 @@ function animate() {
     // Update interaction points
     updateInteractionPoints(deltaTime);
     
-    // Occasionally create random lava spurts for more dynamism
-    if (Math.random() < 0.02) {
+    // Occasionally create random lava spurts but much less frequently
+    if (Math.random() < 0.005) { // Increased from 0.002 for more activity
       const x = Math.random();
       const y = Math.random();
       
-      // Create spurts with varying intensity
-      if (Math.random() < 0.7) {
-        addInteractionPoint(x, y, 0.3 + Math.random() * 0.5);
-      }
+      addInteractionPoint(x, y, 0.3 + Math.random() * 0.3); // Increased intensity
     }
   }
   

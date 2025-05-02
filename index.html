@@ -3,26 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magma Finance - Smart Liquidity Strategies</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Raleway:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>MAGMA - Best Way to Provide Liquidity</title>
     <style>
         :root {
-            --primary: #E53E3E;
-            --primary-dark: #C53030;
-            --accent: #FF8C00;
-            --background: #080809;
-            --surface: #0E0E10;
-            --surface-dark: rgba(10, 10, 10, 0.85);
-            --text: #FFFFFF;
-            --text-secondary: rgba(255, 255, 255, 0.7);
-            --text-muted: rgba(255, 255, 255, 0.5);
-            --border: rgba(255, 255, 255, 0.08);
-            --max-width: 1200px;
-            --nav-height: 80px;
-            --content-padding: clamp(1.5rem, 5vw, 3rem);
-            --radius: 12px;
+            --background: #0a0a0a;
+            --text: #cccccc;
+            --text-hover: #ffffff;
+            --accent: #d63031;
         }
 
         * {
@@ -32,649 +19,418 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--background);
+            font-family: 'Courier New', 'IBM Plex Mono', monospace;
+            background: #0c0c0c;
             color: var(--text);
             line-height: 1.6;
-            overflow-x: hidden;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            position: relative;
+            overflow-x: hidden;
+            text-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
         }
 
         .container {
             width: 100%;
-            max-width: var(--max-width);
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 0 var(--content-padding);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            min-height: 80vh;
+            position: relative;
+            padding: 0 1rem;
         }
 
-        .nav {
+        header {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            height: var(--nav-height);
-            background: var(--surface-dark);
-            backdrop-filter: blur(20px);
-            z-index: 100;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .nav .container {
-            height: 100%;
+            padding: 1.5rem;
+            width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            z-index: 10;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            background: rgba(12, 12, 12, 0.6);
         }
 
-        .nav-logo {
-            height: 28px;
-            transition: opacity 0.3s ease;
+        .header-logo {
+            max-width: 150px;
+            height: auto;
+            filter: brightness(0) invert(1);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
-        .nav-logo:hover {
-            opacity: 0.8;
-        }
-
-        .nav-links {
+        nav {
             display: flex;
-            gap: clamp(2rem, 3vw, 3rem);
-            align-items: center;
+            gap: 2rem;
+            margin-left: auto;
         }
 
         .nav-link {
-            color: var(--text-secondary);
+            color: var(--text);
             text-decoration: none;
-            font-size: 0.95rem;
-            font-weight: 400;
-            letter-spacing: 0.02em;
-            transition: all 0.3s ease;
-            padding: 0.5rem;
-            border-radius: 4px;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
         }
 
         .nav-link:hover {
-            color: #A52020;
-        }
-        
-        .mobile-menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--text);
-            font-size: 1.5rem;
-            cursor: pointer;
+            color: var(--text-hover);
         }
 
-        main.hero {
-            min-height: 90vh;
+        .dot {
+            font-size: 1.2rem;
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            position: absolute;
+            background: rgba(20, 20, 20, 0.95);
+            min-width: 160px;
+            right: 0;
+            top: 100%;
+            padding: 0.5rem 0;
+            margin-top: 0.8rem;
+            z-index: 1;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            pointer-events: none;
+            transform: translateY(-10px);
+            border-radius: 3px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .dropdown-content:after {
+            content: '';
+            position: absolute;
+            top: -6px;
+            right: 12px;
+            width: 10px;
+            height: 10px;
+            background: rgba(20, 20, 20, 0.95);
+            transform: rotate(45deg);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .dropdown:hover .dropdown-content,
+        .dropdown.open .dropdown-content {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            color: var(--text);
+            text-decoration: none;
+            padding: 0.8rem 1.2rem;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s ease, background-color 0.2s ease;
+            position: relative;
+            font-size: 0.9rem;
+            gap: 8px;
+            border-left: 2px solid transparent;
+        }
+
+        .dropdown-item:hover {
+            color: var(--text-hover);
+            background: rgba(255, 255, 255, 0.08);
+            border-left: 2px solid var(--text-hover);
+        }
+
+        .dropdown-item:not(:last-child) {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .dropdown-item svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Add padding to create a larger hover area */
+        .dropdown:after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            height: 20px;
+        }
+
+        .dropdown-content:before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 0;
+            right: 0;
+            height: 20px;
+        }
+
+        .main-content {
+            text-align: left;
+            margin-bottom: 1.5rem;
+            width: 100%;
+            margin-top: 6rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .title {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            font-weight: normal;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            max-width: 800px;
+            white-space: pre-line;
+            color: var(--text-hover);
+            text-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+        }
+
+        .subtitle {
+            font-size: clamp(0.9rem, 1.8vw, 1.1rem);
+            max-width: 650px;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            position: relative;
+            color: var(--text);
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .stats {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: calc(var(--nav-height) + 1rem) 0 6rem;
-            position: relative;
+            gap: 1.5rem;
+            align-items: flex-start;
+            position: absolute;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
         }
 
-        .stats-container {
-            position: relative;
-            top: calc(var(--nav-height) - 1rem);
-            z-index: 2;
-            display: flex;
-            justify-content: center;
-            margin: 0 auto;
-            padding: 0 var(--content-padding);
-            width: fit-content;
-            opacity: 0;
-        }
-
-        .stat-card {
-            background: rgba(25, 25, 28, 0.5);
-            border-radius: 50px;
-            padding: 0.5rem 1.5rem;
+        .stat {
             display: flex;
             align-items: center;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
             gap: 1rem;
-            transition: all 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            background: rgba(30, 30, 33, 0.6);
-            border-color: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-        
-        .stat-item:not(:last-child) {
-            margin-right: 1.2rem;
-            padding-right: 1.2rem;
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .stat-label {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            font-weight: 400;
+            font-size: clamp(1rem, 1.5vw, 1.2rem);
+            text-transform: uppercase;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .graph {
+            display: flex;
+            gap: 2px;
+        }
+
+        .bar {
+            width: 6px;
+            height: 30px;
+            background: var(--text);
+            display: inline-block;
+        }
+
+        .bar.empty {
+            opacity: 0.2;
         }
 
         .stat-value {
-            font-size: 0.95rem;
-            font-weight: 500;
-            color: var(--text);
-            white-space: nowrap;
-        }
-        
-        /* Adjust spacing between stat-label and stat-value on mobile */
-        @media (min-width: 769px) {
-            .stat-item {
-                flex-direction: row;
-                align-items: baseline;
-            }
-            
-            .stat-label::after {
-                content: ":";
-                margin-right: 0.4rem;
-            }
-        }
-        
-        .hero-content {
-            width: 100%;
-            max-width: 950px;
-            margin: 7rem auto 0;
-            text-align: center;
-            z-index: 1;
-            padding: 0 var(--content-padding);
+            font-size: clamp(1.1rem, 1.8vw, 1.3rem);
+            font-weight: bold;
+            color: var(--text-hover);
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
         }
 
-        .hero-subtitle-top {
-            font-size: 0.95rem;
-            font-weight: 400;
-            letter-spacing: 0.2em;
+        .cta {
+            margin-top: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            border: 1px dotted var(--text);
+            background: transparent;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1.2rem;
+            transition: color 0.2s ease, border-color 0.3s ease, background-color 0.3s ease;
+            text-decoration: none;
+            position: relative;
+            display: inline-block;
+            letter-spacing: 4px;
             text-transform: uppercase;
-            color: var(--primary);
-            margin-bottom: 1.5rem;
-            opacity: 0.9;
+            align-self: flex-start;
+            padding: 0.8rem 2rem;
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
         }
 
-        .hero-title {
-            font-family: 'Raleway', sans-serif;
-            font-size: clamp(2.5rem, 6vw, 4.2rem);
-            margin-bottom: clamp(1.5rem, 3vw, 2rem);
-            line-height: 1.15;
-            font-weight: 600;
-            letter-spacing: -0.01em;
-            color: var(--text);
+        .cta::before,
+        .cta::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            opacity: 0;
+            transition: width 0.3s ease, height 0.3s ease 0.2s, opacity 0.1s;
         }
 
-        .hero-title .magma-logo {
-            height: 1em;
-            width: auto;
-            vertical-align: text-bottom;
-            margin-left: 0.15em;
-            filter: drop-shadow(0 2px 8px rgba(229, 62, 62, 0.3)) brightness(0) saturate(100%) invert(22%) sepia(93%) saturate(7466%) hue-rotate(351deg) brightness(94%) contrast(95%);
-            position: relative;
-            top: 0.05em;
+        .cta::before {
+            top: 0;
+            left: 0;
+            border-top: 1px solid var(--text-hover);
+            border-left: 1px solid var(--text-hover);
         }
 
-        .hero-title span {
-            color: var(--primary);
+        .cta::after {
+            bottom: 0;
+            right: 0;
+            border-bottom: 1px solid var(--text-hover);
+            border-right: 1px solid var(--text-hover);
         }
 
-        .hero-subtitle {
-            font-size: clamp(1.1rem, 2vw, 1.25rem);
-            color: var(--text-secondary);
-            margin-bottom: 4rem;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-            line-height: 1.7;
-            font-weight: 300;
+        .cta:hover,
+        .cta:active,
+        .cta:focus {
+            color: var(--text-hover);
+            border-color: rgba(255, 255, 255, 0);
+            background: rgba(255, 255, 255, 0.02);
+            outline: none;
         }
 
-        .cta-buttons {
-            display: flex;
-            gap: 2rem;
-            justify-content: center;
-            margin-bottom: 5rem;
+        .cta:hover::before,
+        .cta:hover::after,
+        .cta:active::before,
+        .cta:active::after,
+        .cta:focus::before,
+        .cta:focus::after {
+            width: 100%;
+            height: 100%;
+            opacity: 1;
         }
 
-        .cta-primary {
-            background: var(--primary);
-            color: var(--text);
-            padding: 1rem 2.5rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 400;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(229, 62, 62, 0.25);
-            letter-spacing: 0.02em;
-            display: inline-block;
+        .cta:active {
+            transform: translateY(1px);
         }
 
-        .cta-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(229, 62, 62, 0.3);
-        }
-        
-        .cta-secondary {
-            color: var(--text);
-            padding: 0.9rem 2rem;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 400;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: transparent;
-            letter-spacing: 0.02em;
-            display: inline-block;
-        }
-        
-        .cta-secondary:hover {
-            border-color: var(--text-secondary);
+        .cta.active {
+            color: var(--text-hover);
+            border-color: rgba(255, 255, 255, 0);
             background: rgba(255, 255, 255, 0.05);
+            transform: translateY(1px);
         }
 
-        .card-section {
-            padding: 6rem 0 8rem;
-            position: relative;
-            z-index: 2;
-            background: transparent;
-            border-top: none;
-            border-bottom: none;
-            min-height: 80vh;
-        }
-        
-        .card-section::before {
-            display: none;
-        }
-        
-        .card-section .container {
-            max-width: 1120px;
-            margin: 0 auto;
-            text-align: center;
-            overflow: visible;
-        }
-        
-        .section-title {
-            text-align: center;
-            font-family: 'Raleway', sans-serif;
-            font-size: clamp(1.5rem, 2.5vw, 1.8rem);
-            margin-bottom: 3.5rem;
-            color: var(--text);
-            position: relative;
-            display: inline-block;
-            letter-spacing: -0.01em;
-            font-weight: 400;
-            opacity: 0.9;
-        }
-        
-        .section-title::after {
-            display: none;
-        }
-        
-        .section-title span {
-            color: var(--primary);
-            background: none;
-            -webkit-background-clip: initial;
-            -webkit-text-fill-color: initial;
-            background-clip: initial;
-            position: relative;
-            font-weight: 500;
-        }
-        
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2.5rem;
-            margin-top: 2rem;
-        }
-        
-        .cards::-webkit-scrollbar {
-            display: none;
-        }
-        
-        .card {
-            background: rgba(14, 14, 16, 0.7);
-            border-radius: var(--radius);
-            padding: 3.5rem 2.2rem;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            position: relative;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-            text-align: left;
-            display: block;
-            height: auto;
-        }
-        
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-            border-color: rgba(229, 62, 62, 0.12);
-            background: var(--surface);
-        }
-        
-        .card:hover .card-icon {
-            transform: scale(1.08);
-            box-shadow: 0 10px 20px rgba(229, 62, 62, 0.25);
-        }
-        
-        .card-icon {
-            margin-bottom: 2.2rem;
-            width: 70px;
-            height: 70px;
-            background: #A52020;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 15px rgba(165, 32, 32, 0.2);
-        }
-        
-        .card-icon svg {
-            width: 28px;
-            height: 28px;
-            fill: none;
-            stroke: white;
-            stroke-width: 2.5px;
-        }
-        
-        .card-title {
-            font-size: 1.6rem;
-            margin-bottom: 1.4rem;
-            font-weight: 500;
-            letter-spacing: 0.01em;
-            color: var(--text);
-        }
-        
-        .card-text {
-            color: var(--text-secondary);
-            font-size: 1rem;
-            line-height: 1.8;
-            padding: 0 0.5rem;
-            opacity: 0.85;
-            overflow: visible;
-            display: block;
+        .cta.active::before,
+        .cta.active::after {
+            width: 100%;
+            height: 100%;
+            opacity: 1;
+            transition: width 0.2s ease, height 0.2s ease, opacity 0.1s;
         }
 
+        /* Canvas for the lava background effect */
         #lava-canvas {
             position: fixed;
             top: 0;
             left: 0;
-            z-index: 0;
             width: 100%;
             height: 100%;
-            opacity: 0.65;
+            z-index: -1;
+            opacity: 0.75; /* Increased for more visibility */
+            object-fit: cover;
         }
 
-        .footer {
-            position: relative;
-            z-index: 2;
-            padding: 1.8rem 0;
-            background: rgba(25, 25, 28, 0.5);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            margin-top: auto;
-        }
-
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 2rem;
-        }
-
-        .footer-logo {
-            height: 22px;
-            opacity: 0.9;
-            transition: opacity 0.3s ease;
-        }
-        
-        .footer-logo:hover {
-            opacity: 1;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 2rem;
-        }
-
-        .footer-link {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.85rem;
-            transition: color 0.3s;
-            padding: 0.5rem;
-        }
-
-        .footer-link:hover {
-            color: var(--text);
-        }
-
-        .footer-right {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        .social-icons {
-            display: flex;
-            gap: 1.5rem;
-        }
-
-        .social-icons a {
-            color: var(--text-muted);
-            text-decoration: none;
-            transition: all 0.3s;
-            padding: 0.5rem;
-            font-size: 0.85rem;
-            border-radius: 4px;
-        }
-
-        .social-icons a:hover {
-            color: var(--text);
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: rgba(229, 62, 62, 0.3);
-            border-radius: 3px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(229, 62, 62, 0.5);
-        }
-        
-        /* Firefox scrollbar */
-        html {
-            scrollbar-width: thin;
-            scrollbar-color: rgba(229, 62, 62, 0.3) rgba(0, 0, 0, 0.2);
-            scroll-behavior: smooth;
-        }
-
-        /* Scroll Indicator */
-        .scroll-indicator {
-            position: absolute;
-            bottom: 2.5rem;
-            left: 0;
-            right: 0;
-            margin: 0 auto;
-            width: 36px;
-            height: 56px;
-            text-align: center;
-            opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 2;
-            cursor: pointer;
-            border-radius: 20px;
-            padding: 0.5rem;
-            animation: fadeIn 1s ease 1.2s forwards;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 0.8; }
-        }
-        
-        .scroll-indicator:hover {
-            opacity: 1;
-            transform: translateY(3px);
-            background: rgba(14, 14, 16, 0.3);
-        }
-        
-        .scroll-indicator .arrow {
-            position: relative;
-            width: 12px;
-            height: 12px;
-            border-right: 2px solid var(--primary);
-            border-bottom: 2px solid var(--primary);
-            transform: rotate(45deg);
-            margin: 0 auto;
-            animation: scrollArrow 2s infinite;
-        }
-        
-        .scroll-indicator .arrow:nth-child(1) {
-            animation-delay: 0s;
-        }
-        
-        .scroll-indicator .arrow:nth-child(2) {
-            animation-delay: 0.3s;
-            margin-top: 6px;
-        }
-        
-        @keyframes scrollArrow {
-            0% { opacity: 0; transform: rotate(45deg) translate(-5px, -5px); }
-            50% { opacity: 1; transform: rotate(45deg) translate(0, 0); }
-            100% { opacity: 0; transform: rotate(45deg) translate(5px, 5px); }
-        }
-
+        /* Responsive for mobile */
         @media (max-width: 768px) {
-            :root {
-                --nav-height: 70px;
-                --content-padding: 1.25rem;
+            body {
+                padding: 0.5rem;
             }
             
-            .nav-logo {
-                height: 24px;
+            .container {
+                padding: 0 0.5rem;
+                justify-content: flex-start;
+                min-height: calc(100vh - 4rem);
             }
             
-            .nav-links {
-                display: none;
-                position: absolute;
-                top: var(--nav-height);
-                left: 0;
-                right: 0;
+            .header-logo {
+                max-width: 120px;
+                position: static;
+                transform: none;
+                margin: 0 auto;
+            }
+            
+            header {
+                padding: 1rem 0.75rem;
                 flex-direction: column;
-                background: var(--surface-dark);
-                padding: 1rem 0;
-                border-bottom: 1px solid var(--border);
-                gap: 0;
-                backdrop-filter: blur(20px);
+                height: auto;
+                gap: 0.75rem;
+                backdrop-filter: blur(5px);
+                -webkit-backdrop-filter: blur(5px);
+                background: rgba(12, 12, 12, 0.6);
             }
             
-            .nav-links.active {
-                display: flex;
+            nav {
+                margin: 0;
+                width: 100%;
+                justify-content: center;
             }
             
             .nav-link {
-                width: 100%;
-                padding: 0.9rem 2rem;
-                text-align: left;
-                border-radius: 0;
-                font-size: 1.1rem;
+                font-size: 0.9rem;
             }
             
-            .nav-link:hover {
-                background: rgba(255, 255, 255, 0.03);
+            .main-content {
+                margin-top: 7rem;
+                text-align: center;
             }
             
-            .mobile-menu-toggle {
-                display: block;
-                padding: 0.5rem;
-                margin-right: -0.5rem;
+            .title {
+                font-size: clamp(1.8rem, 5vw, 2.5rem);
+                margin-bottom: 1.25rem;
+                text-align: center;
+                line-height: 1.3;
             }
             
-            .hero {
-                padding-top: calc(var(--nav-height) + 1rem);
-                min-height: 85vh;
-            }
-            
-            .hero-content {
-                margin-top: 9rem;
-            }
-            
-            .hero-subtitle-top {
-                font-size: 0.85rem;
-                margin-bottom: 1.2rem;
-            }
-            
-            .hero-title {
-                font-size: clamp(2rem, 8vw, 2.8rem);
+            .subtitle {
+                font-size: 0.9rem;
                 margin-bottom: 1.5rem;
-                padding: 0 0.5rem;
+                text-align: center;
+                max-width: 100%;
+                line-height: 1.5;
             }
             
-            .hero-subtitle {
-                font-size: 1.05rem;
-                margin-bottom: 2.5rem;
-                padding: 0 0.5rem;
-            }
-            
-            .stats-container {
-                top: calc(var(--nav-height) + 0.5rem);
-                padding: 0 1rem;
-                width: calc(100% - 2rem);
-                max-width: 400px;
-            }
-            
-            .stat-card {
-                padding: 0.8rem 1.2rem;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.8rem;
-                border-radius: 16px;
+            .stats {
+                position: relative;
+                right: auto;
+                top: auto;
+                transform: none;
+                margin: 0.5rem auto 2rem;
                 width: 100%;
-            }
-            
-            .stat-item {
-                width: 100%;
-                display: flex;
-                justify-content: space-between;
+                justify-content: center;
                 align-items: center;
             }
             
-            .stat-item:not(:last-child) {
-                margin-right: 0;
-                padding-right: 0;
-                padding-bottom: 0.8rem;
-                margin-bottom: 0;
-                border-right: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            .bar {
+                width: 5px;
+                height: 20px;
             }
             
             .stat-label {
@@ -685,334 +441,164 @@
                 font-size: 1rem;
             }
             
-            .cta-buttons {
-                flex-direction: column;
+            .dropdown-content {
+                position: absolute;
+                right: auto;
+                left: 50%;
+                transform: translateX(-50%) translateY(-10px);
+                text-align: center;
+                width: 180px;
+            }
+            
+            .dropdown:hover .dropdown-content,
+            .dropdown.open .dropdown-content {
+                transform: translateX(-50%) translateY(0);
+            }
+            
+            .dropdown-content:after {
+                right: auto;
+                left: 50%;
+                margin-left: -5px;
+            }
+            
+            .cta {
+                font-size: 1rem;
+                letter-spacing: 3px;
+                align-self: center;
+                padding: 0.7rem 1.5rem;
+                margin: 1.5rem auto;
+                border-width: 1px;
+            }
+            
+            .cta::before,
+            .cta::after {
+                border-width: 1px;
+            }
+            
+            #lava-canvas {
+                object-position: center;
+            }
+        }
+        
+        /* Small mobile screens */
+        @media (max-width: 375px) {
+            header {
+                padding: 0.75rem 0.5rem;
+            }
+            
+            .header-logo {
+                max-width: 100px;
+            }
+            
+            nav {
                 gap: 1rem;
-                align-items: stretch;
-                padding: 0 1.5rem;
-                margin-bottom: 3rem;
             }
             
-            .cta-primary, .cta-secondary {
-                width: 100%;
-                text-align: center;
-                padding: 1rem;
-                font-size: 1.05rem;
+            .nav-link {
+                font-size: 0.8rem;
             }
             
-            .card-section {
-                padding: 4rem 0 5rem;
-                min-height: auto;
-            }
-            
-            .section-title {
+            .title {
                 font-size: 1.6rem;
-                margin-bottom: 2.5rem;
-                padding: 0 1rem;
             }
             
-            .cards {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-                margin: 0 auto;
-                padding: 0 1rem;
+            .dot {
+                font-size: 1rem;
             }
             
-            .card {
-                padding: 2.5rem 1.8rem;
-            }
-            
-            .card-icon {
-                width: 60px;
-                height: 60px;
-                margin-bottom: 1.8rem;
-            }
-            
-            .card-icon svg {
-                width: 24px;
-                height: 24px;
-            }
-            
-            .card-title {
-                font-size: 1.4rem;
-                margin-bottom: 1.2rem;
-            }
-            
-            .card-text {
-                font-size: 0.95rem;
-                padding: 0;
-            }
-            
-            .footer {
-                padding: 2.5rem 0;
-            }
-            
-            .footer-content {
-                flex-direction: column;
-                text-align: center;
-                gap: 2rem;
-            }
-            
-            .footer-left {
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 1.5rem;
-            }
-            
-            .footer-logo {
-                height: 20px;
-            }
-            
-            .footer-links {
-                gap: 1.5rem;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            
-            .footer-link {
+            .cta {
+                padding: 0.6rem 1.2rem;
                 font-size: 0.9rem;
             }
-            
-            .social-icons {
-                gap: 2rem;
-                justify-content: center;
-            }
-            
-            .social-icons a {
-                font-size: 0.9rem;
-            }
-            
-            .scroll-indicator {
-                bottom: 1.5rem;
-                width: 32px;
-                height: 48px;
-            }
-        }
-
-        /* Add animation classes */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .fade-in-up {
-            animation: fadeInUp 0.7s ease forwards;
-        }
-        
-        .hero-subtitle-top {
-            opacity: 0;
-        }
-        
-        .hero-title {
-            opacity: 0;
-        }
-        
-        .hero-subtitle {
-            opacity: 0;
-        }
-        
-        .cta-buttons {
-            opacity: 0;
-        }
-        
-        .section-title {
-            opacity: 0;
-        }
-        
-        .card {
-            opacity: 0;
         }
     </style>
 </head>
 <body>
-    <nav class="nav">
-        <div class="container">
-            <img src="/magma-logo-text.svg" alt="Magma Finance" class="nav-logo">
-            <button class="mobile-menu-toggle">≡</button>
-            <div class="nav-links">
-                <a href="#" class="nav-link">Features</a>
-                <a href="#" class="nav-link">Resources</a>
-                <a href="#" class="nav-link">Docs</a>
-            </div>
-        </div>
-    </nav>
-
-    <main class="hero">
-        <div class="stats-container">
-            <div class="stat-card">
-                <div class="stat-item">
-                    <div class="stat-label">Total value locked</div>
-                    <div class="stat-value">$1,456,869.82</div>
-                </div>
-            </div>
-        </div>
-        <div class="hero-content">
-            <div class="hero-subtitle-top">Decentralized Liquidity</div>
-            <h1 class="hero-title">
-                <img src="/magma-logo-text.svg" alt="Magma" class="magma-logo">
-                <div style="font-size: clamp(1.8rem, 4vw, 2.6rem); color: var(--text-secondary); font-weight: 300; margin-top: 2.5rem;">Concentrated Liquidity Made Simple</div>
-            </h1>
-            <p class="hero-subtitle">
-                
-            </p>
-            
-            <div class="cta-buttons" style="margin-top: 4rem;">
-                <a href="/app" class="cta-primary" style="background: #A52020;">Launch Platform</a>
-                <a href="/docs" class="cta-secondary">Learn More</a>
-            </div>
-            <div class="scroll-indicator">
-                <div class="arrow"></div>
-                <div class="arrow"></div>
-            </div>
-        </div>
-    </main>
-    
-    <section class="card-section">
-        <div class="container">
-            <h2 class="section-title">Smart Liquidity Solutions</h2>
-            <div class="cards">
-                <div class="card" style="--card-index: 0">
-                    <div class="card-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="card-title">Optimized Yields</h3>
-                    <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
-                </div>
-                <div class="card" style="--card-index: 1">
-                    <div class="card-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="card-title">Risk Management</h3>
-                    <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent varius dolor purus, et eleifend lectus congue id. Quisque eu metus sit amet turpis facilisis ullamcorper.</p>
-                </div>
-                <div class="card" style="--card-index: 2">
-                    <div class="card-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <path d="M12 6v6l4 2"></path>
-                        </svg>
-                    </div>
-                    <h3 class="card-title">Automated Strategies</h3>
-                    <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula. Sed auctor neque eu tellus rhoncus ut eleifend nibh porttitor.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-left">
-                    <img src="/magma-logo-text.svg" alt="Magma Finance" class="footer-logo">
-                    <div class="footer-links">
-                        <a href="#" class="footer-link">Terms</a>
-                        <a href="#" class="footer-link">Privacy</a>
-                    </div>
-                </div>
-                <div class="footer-right">
-                    <div class="social-icons">
-                        <a href="https://discord.gg/magma" target="_blank" rel="noopener">Discord</a>
-                        <a href="https://x.com/magma" target="_blank" rel="noopener">Twitter</a>
-                        <a href="https://github.com/magma" target="_blank" rel="noopener">GitHub</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
-
     <canvas id="lava-canvas"></canvas>
+    <header>
+        <a href="/">
+            <img src="/magma-logo-text.svg" alt="MAGMA" class="header-logo">
+        </a>
+        <nav>
+            <a href="#" class="nav-link"><span class="dot">⚈</span> DOCS</a>
+            <div class="dropdown">
+                <a href="#" class="nav-link" id="socials-toggle"><span class="dot">⚈</span> SOCIALS</a>
+                <div class="dropdown-content">
+                    <a href="https://x.com/magmavaults" class="dropdown-item" target="_blank">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                        X / TWITTER
+                    </a>
+                    <a href="https://discord.gg/rDe47TfcfH" class="dropdown-item" target="_blank">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+                        </svg>
+                        DISCORD
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <main class="main-content">
+            <h1 class="title">BEST WAY TO
+PROVIDE LIQUIDITY</h1>
+            <p class="subtitle">Magma enhances DeFi with passive, permissionless liquidity vaults,
+optimizing yield and minimizing risk. Perfect for all liquidity providers,
+featuring adjustable strategies and automation potential.</p>
+        </main>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">TVL</div>
+                <div class="graph">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </div>
+                <div class="stat-value">$2M+</div>
+            </div>
+        </div>
+
+        <a href="https://app.magma.eco/" class="cta">ENTER</a>
+    </div>
+
     <script type="module" src="/src/main.js"></script>
     <script>
-        // Mobile menu toggle
-        document.querySelector('.mobile-menu-toggle').addEventListener('click', function() {
-            document.querySelector('.nav-links').classList.toggle('active');
+        // Add click functionality for mobile
+        document.getElementById('socials-toggle').addEventListener('click', function(e) {
+            e.preventDefault();
+            const dropdown = this.parentNode;
+            dropdown.classList.toggle('open');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelector('.dropdown').classList.remove('open');
+            }
+        });
+
+        // Add touch support for animations
+        document.querySelector('.cta').addEventListener('touchstart', function() {
+            this.classList.add('active');
         });
         
-        // Add animations when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Animate stats container first
+        document.querySelector('.cta').addEventListener('touchend', function() {
             setTimeout(() => {
-                document.querySelector('.stats-container').classList.add('fade-in-up');
-            }, 100);
-            
-            // Then animate hero elements with staggered delay
-            setTimeout(() => {
-                document.querySelector('.hero-subtitle-top').classList.add('fade-in-up');
+                this.classList.remove('active');
             }, 300);
-            
-            setTimeout(() => {
-                document.querySelector('.hero-title').classList.add('fade-in-up');
-            }, 500);
-            
-            setTimeout(() => {
-                document.querySelector('.hero-subtitle').classList.add('fade-in-up');
-            }, 700);
-            
-            setTimeout(() => {
-                document.querySelector('.cta-buttons').classList.add('fade-in-up');
-            }, 900);
-            
-            // Set up intersection observer for the card section
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        // Animate section title
-                        document.querySelector('.section-title').classList.add('fade-in-up');
-                        
-                        // Animate cards with staggered delay
-                        document.querySelectorAll('.card').forEach((card, index) => {
-                            setTimeout(() => {
-                                card.classList.add('fade-in-up');
-                            }, 300 + (index * 200));
-                        });
-                        
-                        // Disconnect observer after animation
-                        observer.disconnect();
-                    }
-                });
-            }, { threshold: 0.1 });
-            
-            // Observe the card section
-            observer.observe(document.querySelector('.card-section'));
-        });
-        
-        // Smooth scroll to section when clicking the scroll indicator
-        document.querySelector('.scroll-indicator').addEventListener('click', function() {
-            const cardSection = document.querySelector('.card-section');
-            cardSection.scrollIntoView({ behavior: 'smooth' });
-        });
-        
-        // Card hover effects
-        document.querySelectorAll('.card').forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-8px)';
-                this.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.2), 0 0 10px rgba(229, 62, 62, 0.1)';
-                this.style.borderColor = 'rgba(229, 62, 62, 0.12)';
-                this.style.background = 'var(--surface)';
-                this.querySelector('.card-icon').style.transform = 'scale(1.08)';
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = '';
-                this.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.15)';
-                this.style.borderColor = 'rgba(255, 255, 255, 0.05)';
-                this.style.background = 'rgba(14, 14, 16, 0.7)';
-                this.querySelector('.card-icon').style.transform = '';
-            });
         });
     </script>
 </body>
 </html>
+
 

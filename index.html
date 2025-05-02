@@ -61,6 +61,8 @@
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
             background: rgba(12, 12, 12, 0.6);
+            opacity: 0;
+            transition: opacity 0.8s ease;
         }
 
         .header-logo {
@@ -194,6 +196,8 @@
             margin-top: 6rem;
             position: relative;
             z-index: 1;
+            opacity: 0;
+            transition: opacity 0.8s ease;
         }
 
         .title {
@@ -226,6 +230,8 @@
             right: 2rem;
             top: 50%;
             transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.8s ease;
         }
 
         .stat {
@@ -281,6 +287,8 @@
             align-self: flex-start;
             padding: 0.8rem 2rem;
             -webkit-tap-highlight-color: rgba(0,0,0,0);
+            opacity: 0;
+            transition: opacity 0.8s ease, color 0.2s ease, border-color 0.3s ease, background-color 0.3s ease;
         }
 
         .cta::before,
@@ -346,6 +354,66 @@
             transition: width 0.2s ease, height 0.2s ease, opacity 0.1s;
         }
 
+        .loading-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            background: #0c0c0c;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-text {
+            font-family: 'Courier New', 'IBM Plex Mono', monospace;
+            font-size: 1.5rem;
+            color: var(--text);
+            letter-spacing: 2px;
+        }
+
+        .typing-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 150px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 101;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .typing-logo {
+            max-width: 250px;
+            filter: brightness(0) invert(1);
+            opacity: 0;
+        }
+
+        .typewriter-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1.2em;
+            background-color: var(--text-hover);
+            margin-left: 0.2em;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .fade-in {
+            opacity: 1 !important;
+        }
+
         /* Canvas for the lava background effect */
         #lava-canvas {
             position: fixed;
@@ -360,6 +428,10 @@
 
         /* Responsive for mobile */
         @media (max-width: 768px) {
+            #lava-canvas {
+                object-position: center;
+            }
+            
             body {
                 padding: 0.5rem;
             }
@@ -474,9 +546,17 @@
             .cta::after {
                 border-width: 1px;
             }
-            
-            #lava-canvas {
-                object-position: center;
+
+            .loading-text {
+                font-size: 1.2rem;
+            }
+
+            .typing-container {
+                height: 100px;
+            }
+
+            .typing-logo {
+                max-width: 180px;
             }
         }
         
@@ -510,12 +590,25 @@
                 padding: 0.6rem 1.2rem;
                 font-size: 0.9rem;
             }
+
+            .typing-logo {
+                max-width: 150px;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="loading-container" id="loading">
+        <div class="loading-text">loading magma...</div>
+    </div>
+
+    <div class="typing-container" id="typing">
+        <img src="/magma-logo-text.svg" alt="MAGMA" class="typing-logo" id="typewriter-logo">
+        <span class="typewriter-cursor" id="cursor"></span>
+    </div>
+
     <canvas id="lava-canvas"></canvas>
-    <header>
+    <header id="header">
         <a href="/">
             <img src="/magma-logo-text.svg" alt="MAGMA" class="header-logo">
         </a>
@@ -542,7 +635,7 @@
     </header>
 
     <div class="container">
-        <main class="main-content">
+        <main class="main-content" id="main-content">
             <h1 class="title">BEST WAY TO
 PROVIDE LIQUIDITY</h1>
             <p class="subtitle">Magma enhances DeFi with passive, permissionless liquidity vaults,
@@ -550,7 +643,7 @@ optimizing yield and minimizing risk. Perfect for all liquidity providers,
 featuring adjustable strategies and automation potential.</p>
         </main>
 
-        <div class="stats">
+        <div class="stats" id="stats">
             <div class="stat">
                 <div class="stat-label">TVL</div>
                 <div class="graph">
@@ -568,7 +661,7 @@ featuring adjustable strategies and automation potential.</p>
             </div>
         </div>
 
-        <a href="https://app.magma.eco/" class="cta">ENTER</a>
+        <a href="https://app.magma.eco/" class="cta" id="cta">ENTER</a>
     </div>
 
     <script type="module" src="/src/main.js"></script>
@@ -596,6 +689,62 @@ featuring adjustable strategies and automation potential.</p>
             setTimeout(() => {
                 this.classList.remove('active');
             }, 300);
+        });
+
+        // Animation sequence
+        document.addEventListener('DOMContentLoaded', function() {
+            const loading = document.getElementById('loading');
+            const typing = document.getElementById('typing');
+            const typewriterLogo = document.getElementById('typewriter-logo');
+            const cursor = document.getElementById('cursor');
+            const header = document.getElementById('header');
+            const mainContent = document.getElementById('main-content');
+            const stats = document.getElementById('stats');
+            const cta = document.getElementById('cta');
+            
+            // Start loading screen
+            setTimeout(() => {
+                // Hide loading and show typing container
+                loading.style.opacity = '0';
+                typing.classList.add('fade-in');
+                
+                setTimeout(() => {
+                    loading.style.display = 'none';
+                    
+                    // Type in logo effect
+                    typeLogoEffect();
+                }, 500);
+            }, 1500); // Show loading for 1.5 seconds
+            
+            function typeLogoEffect() {
+                // Show the logo and start typewriter effect
+                typewriterLogo.style.opacity = '1';
+                
+                // After logo is typed, fade in the rest of UI
+                setTimeout(() => {
+                    cursor.style.display = 'none';
+                    typing.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        typing.style.display = 'none';
+                        
+                        // Fade in UI elements in sequence
+                        header.classList.add('fade-in');
+                        
+                        setTimeout(() => {
+                            mainContent.classList.add('fade-in');
+                            
+                            setTimeout(() => {
+                                stats.classList.add('fade-in');
+                                
+                                setTimeout(() => {
+                                    cta.classList.add('fade-in');
+                                }, 200);
+                            }, 200);
+                        }, 300);
+                    }, 500);
+                }, 1500); // Logo typing duration
+            }
         });
     </script>
 </body>

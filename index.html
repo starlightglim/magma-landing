@@ -599,7 +599,7 @@
 </head>
 <body>
     <div class="loading-container" id="loading">
-        <div class="loading-text">loading magma...</div>
+        <!-- Removed the loading text -->
     </div>
 
     <div class="typing-container" id="typing">
@@ -713,8 +713,8 @@ featuring adjustable strategies and automation potential.</p>
                     
                     // Type in logo effect
                     typeLogoEffect();
-                }, 500);
-            }, 1500); // Show loading for 1.5 seconds
+                }, 300);
+            }, 500);
             
             function typeLogoEffect() {
                 // Show the logo and start typewriter effect
@@ -739,11 +739,11 @@ featuring adjustable strategies and automation potential.</p>
                                 
                                 setTimeout(() => {
                                     cta.classList.add('fade-in');
-                                }, 200);
-                            }, 200);
-                        }, 300);
-                    }, 500);
-                }, 1500); // Logo typing duration
+                                }, 100);
+                            }, 100);
+                        }, 150);
+                    }, 300);
+                }, 800);
             }
         });
     </script>
